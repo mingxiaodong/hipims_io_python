@@ -25,11 +25,11 @@ import warnings
 import shutil
 import pickle
 import gzip
-import scipy.signal  # to call scipy.signal.convolve2d to get outline boundary
+import scipy.signal
 import numpy as np
 import matplotlib.pyplot as plt
-from .Raster import Raster
 from datetime import datetime
+from .Raster import Raster
 from .Boundary import Boundary
 from .ModelSummary import ModelSummary
 #%% grid data for HiPIMS input format
@@ -471,11 +471,11 @@ class InputHipims:
         self._make_data_dirs()
         if is_single_gpu is True or self.num_of_sections == 1:
             file_name = self.data_folders['mesh']+'DEM.txt'
-            self.Raster.Write_asc(file_name)
+            self.Raster.write_asc(file_name)
         else:
             for obj_section in self.Sections:
                 file_name = obj_section.data_folders['mesh']+'DEM.txt'
-                obj_section.Raster.Write_asc(file_name)
+                obj_section.Raster.write_asc(file_name)
         self.Summary.write_readme(self.case_folder+'/readme.txt')
         print('DEM.txt created')
     

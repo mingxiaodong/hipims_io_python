@@ -15,7 +15,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 setuptools.setup(
         name='hipims_io',
-        version='0.2.2',
+        version='0.2.3',
         description='To process input and output files of the HiPIMS model',
         url='https://github.com/mingxiaodong/hipims_io_py_package',
         author='Xiaodong Ming',

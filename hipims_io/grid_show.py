@@ -24,13 +24,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 import matplotlib.colors as colors
-from raster import Raster
+import spatial_analysis as sp
 from matplotlib import cm
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
 from matplotlib.colors import LightSource
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
 #%% draw inundation map with domain outline
 def mapshow(raster_obj=None, array=None, header=None, ax=None,
             figname=None, figsize=None, dpi=300, 
@@ -46,18 +45,18 @@ def mapshow(raster_obj=None, array=None, header=None, ax=None,
     vmin and vmax define the data range that the colormap covers
     **kwargs: keywords argument of function imshow
     """
-    if raster_obj is None:
-        raster_obj = Raster(array=array, header=header)
+    if raster_obj is not None:
+        array = raster_obj.array
+        header = raster_obj.header
     # change NODATA_value to nan
     np.warnings.filterwarnings('ignore')
-    array = raster_obj.array+0
-    ind = array == raster_obj.header['NODATA_value']
+    array = array+0
+    ind = array == header['NODATA_value']
     if ind.sum()>0:
         array = array.astype('float32')
         array[ind] = np.nan
     # adjust tick label and axis label
-    map_extent = raster_obj.extent
-    
+    map_extent = sp.header2extent(header)    
     if ax is None:
         fig, ax = plt.subplots(1, figsize=figsize)
     else:
@@ -79,17 +78,21 @@ def mapshow(raster_obj=None, array=None, header=None, ax=None,
     # return fig and axis handles
     return fig, ax
 
-def rankshow(raster_obj, breaks=[0.2, 0.3, 0.5, 1, 2], color='Blues',
-            show_colorbar=True, show_colorlegend=False,
-            figname=None, figsize=None, dpi=200,
-            relocate=False, scale_ratio=1, **kwargs):
+def rankshow(raster_obj=None, array=None, header=None, 
+             breaks=[0.2, 0.3, 0.5, 1, 2], color='Blues',
+             show_colorbar=True, show_colorlegend=False,
+             figname=None, figsize=None, dpi=200,
+             relocate=False, scale_ratio=1, **kwargs):
     """ Display water depth map in ranks defined by breaks
     color: color series of the ranks 
-    """  
+    """
+    if raster_obj is not None:
+        array = raster_obj.array
+        header = raster_obj.header
     # change nan values to the min grid value
-    array = raster_obj.array+0
+    array = array+0
     np.warnings.filterwarnings('ignore')
-    ind = array == raster_obj.header['NODATA_value']
+    ind = array == header['NODATA_value']
     array = array.astype('float32')
     array[ind] = np.nan
     min_value = np.nanmin(array)
@@ -106,9 +109,9 @@ def rankshow(raster_obj, breaks=[0.2, 0.3, 0.5, 1, 2], color='Blues',
     newcolors = newcolors(np.linspace(0, 1, norm.N))
     newcolors[0, :] = np.array([255/256, 255/256, 255/256, 1]) #white for 1st
     newcmp = ListedColormap(newcolors)     
-    map_extent = raster_obj.extent
+    map_extent = sp.header2extent(header)
     fig, ax = plt.subplots(figsize=figsize)
-    chm_plot = ax.imshow(raster_obj.array, extent=map_extent, 
+    chm_plot = ax.imshow(array, extent=map_extent, 
                          cmap=newcmp, norm=norm, alpha=0.7)
     _adjust_axis_tick(ax, relocate, scale_ratio)
     # create colorbar
@@ -249,9 +252,8 @@ def _plot_temp_figs(obj_list=None, header=None, array_3d=None,
         kwargs['breaks']=breaks
     fig_names = []
     for i in np.arange(array_3d.shape[0]):
-        grid_obj = Raster(header=header, array=array_3d[i])
         fig_name = 'temp'+str(i)+'.png'
-        fig, ax = plot_fun(grid_obj, **kwargs)
+        fig, ax = plot_fun(array=array_3d[i],header=header, **kwargs)
         if type(time_str) is list:
             ax.set_title(time_str[i])
         fig.savefig(fig_name)
@@ -334,7 +336,7 @@ def _adjust_axis_tick(ax, relocate=True, scale_ratio=1):
     return None
 
 def main():
-    print('Functions to show grid data')
+    print('Package to show grid data')
 
 if __name__=='__main__':
     main()

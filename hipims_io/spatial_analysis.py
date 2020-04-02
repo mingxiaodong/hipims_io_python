@@ -17,6 +17,7 @@ To do:
 - read and write arc
 """
 __author__ = "Xiaodong Ming"
+import os
 import gzip
 import numpy as np
 import matplotlib.pyplot as plt
@@ -86,9 +87,13 @@ def arcgridread(file_name, header_rows=6, return_nan=True):
     array = np.loadtxt(file_name, skiprows=header_rows, dtype='float64')
     if return_nan:
         array[array == header['NODATA_value']] = np.nan
-    extent = header2extent(header)
-    #gridArray = float(gridArray)
-    return array, header, extent
+    prj_file = file_name[:-4]+'.prj'
+    if os.path.isfile(prj_file):
+        with open(prj_file, 'r') as file:
+            projection = file.read()
+    else:
+        projection = None
+    return array, header, projection
 
 def arcgridwrite(file_name, array, header, compression=False):
     """ write gird data into a ascii file
@@ -130,9 +135,9 @@ def arcgridwrite(file_name, array, header, compression=False):
     file_h.close()
     print(file_name + ' created')
 
-def read_tif(file_name):
+def tif_read(file_name):
     """
-    read tif file and return array, header
+    read tif file and return array, header, projection
     only read the first band
     """
     from osgeo import gdal
@@ -154,10 +159,84 @@ def read_tif(file_name):
     if not np.isscalar(header['NODATA_value']):
         header['NODATA_value'] = -9999
     array[array == header['NODATA_value']] = float('nan')
-    extent = header2extent(header)
+    projection = ds.GetProjection()
     rasterBand = None
     ds = None
+    return array, header, projection
+
+def byte_file_read(file_name):
+    """ Read file from a bytes object
+    """
+    # read header
+    header = {} # store header information including ncols, nrows, ...
+    num_header_rows = 6
+    for _ in range(num_header_rows):
+        line = file_name.readline()
+        line = line.strip().decode("utf-8").split(" ", 1)
+        header[line[0]] = float(line[1])
+        # read value array
+    array  = np.loadtxt(file_name, skiprows=num_header_rows, 
+                        dtype='float64')
+    array[array == header['NODATA_value']] = float('nan')
+    header['ncols'] = int(header['ncols'])
+    header['nrows'] = int(header['nrows'])
+    return array, header
+
+#%% Combine raster files
+def combine_raster(asc_files, num_header_rows=6):
+    """Combine a list of asc files to a DEM Raster
+    asc_files: a list of asc file names
+    all raster files have the same cellsize
+    """
+    # default values for the combined Raster file
+    xllcorner_all = []
+    yllcorner_all = []
+    extent_all =[]
+    # read header
+    for file in asc_files:
+        header0 = arc_header_read(file, num_header_rows)
+        extent0 = header2extent(header0)
+        xllcorner_all.append(header0['xllcorner'])
+        yllcorner_all.append(header0['yllcorner'])
+        extent_all.append(extent0)
+    cellsize = header0['cellsize']
+    if 'NODATA_value' in header0.keys():
+        NODATA_value = header0['NODATA_value']
+    else:
+        NODATA_value = -9999
+    xllcorner_all = np.array(xllcorner_all)
+    xllcorner = xllcorner_all.min()
+    yllcorner_all = np.array(yllcorner_all)
+    yllcorner = yllcorner_all.min()
+    extent_all = np.array(extent_all)
+    x_min = np.min(extent_all[:,0])
+    x_max = np.max(extent_all[:,1])
+    y_min = np.min(extent_all[:,2])
+    y_max = np.max(extent_all[:,3])
+#    extent = (x_min, x_max, y_min, y_max)
+#    print(extent)
+    nrows = int((y_max-y_min)/cellsize)
+    ncols = int((x_max-x_min)/cellsize)
+    header = header0.copy()
+    header['xllcorner'] = xllcorner
+    header['yllcorner'] = yllcorner
+    header['ncols'] = ncols
+    header['nrows'] = nrows
+    header['NODATA_value'] = NODATA_value
+    array = np.zeros((nrows ,ncols))+NODATA_value
+    print(array.shape)
+    for file in asc_files:
+        array0, header0, _ = arcgridread(file, num_header_rows)
+        extent0 = header2extent(header0)
+        x0 = extent0[0]+header0['cellsize']/2
+        y0 = extent0[3]-header0['cellsize']/2
+        row0, col0 = map2sub(x0, y0, header)
+        array[row0:row0+header0['nrows'],
+              col0:col0+header0['ncols']] = array0
+    array[array == header['NODATA_value']] = float('nan')
+    extent = header2extent(header)
     return array, header, extent
+
 
 #%% ----------------------------Visulization-----------------------------------
 def map_show(array, header, figname=None, figsize=None, dpi=300,
@@ -286,6 +365,78 @@ def shape_extent_to_header(shape, extent, nan_value=-9999):
               'xllcorner':xllcorner, 'yllcorner':yllcorner,
               'cellsize':cellsize, 'NODATA_value':nan_value}
     return header
+
+def map2sub(X, Y, header):
+    """ convert map coordinates to subscripts of an array
+    array is defined by a geo-reference header
+    X, Y: a scalar or numpy array of coordinate values
+    Return: rows, cols in the array
+    """
+    # X and Y coordinate of the centre of the first cell in the array
+    x0 = header['xllcorner']+0.5*header['cellsize']
+    y0 = header['yllcorner']+(header['nrows']-0.5)*header['cellsize']
+    rows = (y0-Y)/header['cellsize'] # row and col number starts from 0
+    cols = (X-x0)/header['cellsize']
+    if isinstance(rows, np.ndarray):
+        rows = rows.astype('int64')
+        cols = cols.astype('int64') #.astype('int64')
+    else:
+        rows = int(rows)
+        cols = int(cols)
+    return rows, cols
+
+def sub2map(rows, cols, header):
+    """
+    convert subscripts of a matrix to map coordinates 
+    rows, cols: subscripts of the data matrix, starting from 0
+    return
+        X, Y: coordinates in map units
+    """
+    #x and y coordinate of the centre of the first cell in the matrix
+    if not isinstance(rows, np.ndarray):
+        rows = np.array(rows)
+        cols = np.array(cols)        
+    extent = header2extent(header)
+    left = extent[0] #(left, right, bottom, top)
+    top = extent[3]
+    X = left + (cols+0.5)*header['cellsize']
+    Y = top  - (rows+0.5)*header['cellsize']  
+    return X, Y
+
+#% Extent compare between two Raster objects
+def compare_extent(extent0, extent1):
+    """Compare and show the difference between two Raster extents
+    extent0, extent1: objects or extent dicts to be compared
+    displaye: whether to show the extent in figures
+    Return:
+        0 extent0>=extent1
+        1 extent0<extent1
+        2 extent0 and extent1 have intersections
+    """
+    logic_left = extent0[0]<=extent1[0]
+    logic_right = extent0[1]>=extent1[1]
+    logic_bottom = extent0[2]<=extent1[2]
+    logic_top = extent0[3]>=extent1[3]
+    logic_all = logic_left+logic_right+logic_bottom+logic_top
+    if logic_all == 4:
+        output = 0
+    elif logic_all == 0:
+        output = 1
+    else:
+        output = 2
+        print(extent0)
+        print(extent1)
+    return output
+   
+def extent2shape_points(extent):
+    """Convert extent to a two-col numpy array of shape points
+    """
+    #extent = (left, right, bottom, top)
+    shape_points = np.array([[extent[0], extent[2]], 
+                             [extent[1], extent[2]], 
+                             [extent[1], extent[3]], 
+                             [extent[0], extent[3]]])
+    return shape_points
 
 def _adjust_map_extent(extent, relocate=True, scale_ratio=1):
     """
