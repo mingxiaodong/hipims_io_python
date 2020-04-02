@@ -28,10 +28,10 @@ import gzip
 import scipy.signal  # to call scipy.signal.convolve2d to get outline boundary
 import numpy as np
 import matplotlib.pyplot as plt
-from raster_analysis import Raster
+from .Raster import Raster
 from datetime import datetime
-from boundary_setup import Boundary
-from model_summary import ModelSummary
+from .Boundary import Boundary
+from .ModelSummary import ModelSummary
 #%% grid data for HiPIMS input format
 class InputHipims:
     """To define input files for a HiPIMS flood model case
@@ -1245,3 +1245,9 @@ def save_object(obj, file_name, compression=True):
         with open(file_name, 'wb') as output_file:
             pickle.dump(obj, output_file, pickle.HIGHEST_PROTOCOL)
     print(file_name+' has been saved')
+
+def main():
+    print('Class to setup input data')
+
+if __name__=='__main__':
+    main()

@@ -10,18 +10,25 @@ Created on Wed Apr  1 15:03:58 2020
 """
 
 
-from setuptools import setup
-
-setup(name='hipims_io',
-      version='0.1',
-      description='To process input and output files of the HiPIMS model',
-      url='https://github.com/mingxiaodong/hipims_io_py_package',
-      author='Xiaodong Ming',
-      author_email='xiaodong.ming@outlook.com',
-      license='NCL',
-      packages=['hipims_io'],
-      install_requires=['gdal',],
-      zip_safe=False)
+import setuptools
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+setuptools.setup(
+        name='hipims_io',
+        version='0.2.2',
+        description='To process input and output files of the HiPIMS model',
+        url='https://github.com/mingxiaodong/hipims_io_py_package',
+        author='Xiaodong Ming',
+        author_email='xiaodong.ming@outlook.com',
+        long_description=long_description,
+        long_description_content_type="text/markdown",
+        packages=setuptools.find_packages(),
+        classifiers=[
+                "Programming Language :: Python :: 3",
+                "License :: OSI Approved :: MIT License",
+                "Operating System :: OS Independent",
+        ],
+        python_requires='>=3.6')
 
 """
 #Sometimes you’ll want to use packages that are properly arranged with 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-boundary_setup
+Boundary
 To do:
     Define boundary conditions for hipims model
 Created on Tue Mar 31 16:05:27 2020
@@ -12,7 +12,9 @@ import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.patches as mplP
-import myclass  # to call class Raster
+from .Raster import header2extent  # to call class Raster
+from .Raster import makeDiagonalShape  # to call class Raster
+
 #%% boundary class definition
 class Boundary(object):
     """Class for boundary conditions
@@ -109,11 +111,11 @@ class Boundary(object):
         cell_id = []
         for n in range(data_table.shape[0]):
             if data_table.extent[n] is None: #outline boundary
-                dem_extent = myclass.header2extent(dem_header)
-                polyPoints = myclass.makeDiagonalShape(dem_extent)
+                dem_extent = header2extent(dem_header)
+                polyPoints = makeDiagonalShape(dem_extent)
             elif len(data_table.extent[n]) == 2:
                 xyv = data_table.extent[n]
-                polyPoints = myclass.makeDiagonalShape([np.min(xyv[:, 0]),
+                polyPoints = makeDiagonalShape([np.min(xyv[:, 0]),
                                                         np.max(xyv[:, 0]),
                                                         np.min(xyv[:, 1]),
                                                         np.max(xyv[:, 1])])

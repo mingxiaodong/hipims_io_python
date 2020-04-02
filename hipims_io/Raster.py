@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-raster_analysis
+raster
 To do:
     Read, write and analyze gridded Raster data
 Created on Tue Mar 31 16:20:13 2020
@@ -16,6 +16,7 @@ import math
 import numpy as np
 from osgeo import ogr
 from scipy import interpolate
+#import spatial_analysis as sp
 import grid_show as gs
 #%% *******************************To deal with raster data********************
 #   ***************************************************************************    
@@ -870,7 +871,7 @@ def merge(obj_origin, obj_target, resample_method='bilinear'):
     return obj_output
 
 def main():
-    print('Package to deal with raster data')
+    print('Class to deal with raster data')
 
 if __name__=='__main__':
     main()
