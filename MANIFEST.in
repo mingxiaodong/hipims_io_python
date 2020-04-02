@@ -1,2 +1,2 @@
 include README.md
-include Example_DEM.asc
+include hipims_io/Example_DEM.asc
