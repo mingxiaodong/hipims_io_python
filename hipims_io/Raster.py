@@ -13,8 +13,8 @@ import math
 import numpy as np
 from osgeo import gdal, ogr, osr
 from scipy import interpolate
-import spatial_analysis as sp
-import grid_show as gs
+import hipims_io.spatial_analysis as sp
+import hipims_io.grid_show as gs
 #%% *******************************To deal with raster data********************
 #   ***************************************************************************    
 class Raster(object):

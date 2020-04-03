@@ -8,28 +8,31 @@ Created on Wed Apr  1 15:03:58 2020
 
 @author: Xiaodong Ming
 """
+from setuptools import setup, find_packages
+from os import path
+here = path.abspath(path.dirname(__file__))
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
-
-import setuptools
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-setuptools.setup(
-        name='hipims_io',
-        version='0.2.3',
-        description='To process input and output files of the HiPIMS model',
-        url='https://github.com/mingxiaodong/hipims_io_py_package',
-        author='Xiaodong Ming',
-        author_email='xiaodong.ming@outlook.com',
-        long_description=long_description,
-        long_description_content_type="text/markdown",
-        packages=setuptools.find_packages(),
-        classifiers=[
-                "Programming Language :: Python :: 3",
-                "License :: OSI Approved :: MIT License",
-                "Operating System :: OS Independent",
-        ],
-        include_package_data=True,
-        python_requires='>=3.6')
+setup(
+      name='hipims_io',
+      version='0.2.5',
+      description='To process input and output files of the HiPIMS model',
+      url='https://github.com/mingxiaodong/hipims_io_py_package',
+      author='Xiaodong Ming',
+      author_email='xiaodong.ming@outlook.com',
+      long_description=long_description,
+      long_description_content_type='text/markdown',
+      classifiers=['Development Status :: 3 - Alpha',
+                   'Programming Language :: Python :: 3',
+                   'License :: OSI Approved :: MIT License',
+                   'Programming Language :: Python :: 3',
+                   'Operating System :: OS Independent',],
+      keywords='hipims model IO',
+      packages=find_packages(where='hipims_io'),
+      include_package_data=True,
+      package_data={'sample': ['Example_DEM.asc'],},
+      python_requires='>=3.6')
 
 """
 #Sometimes you’ll want to use packages that are properly arranged with 

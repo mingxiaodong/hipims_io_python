@@ -15,7 +15,7 @@ import pickle
 import gzip
 import numpy as np
 import pandas as pd
-import spatial_analysis as sp
+import hipims_io.spatial_analysis as sp
 from .Raster import Raster
 class OutputHipims:
     """To read and analyze otuput files from a HiPIMS flood model

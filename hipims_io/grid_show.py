@@ -24,7 +24,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 import matplotlib.colors as colors
-import spatial_analysis as sp
+import hipims_io.spatial_analysis as sp
 from matplotlib import cm
 from matplotlib.colors import ListedColormap
 from matplotlib.patches import Patch
