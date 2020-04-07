@@ -5,8 +5,10 @@ To install hipims_io
 pip install hipims_io
 ```
 A demonstration to setup an HiPIMS input object with a sample DEM:
+```
 >>> import hipims_io as hp
 >>> obj_in = hp.demo_hipims_input() # create an input object and show
+```
 
 To setup an input object for HiPIMS, you will need at least DEM file and do:
 ```
