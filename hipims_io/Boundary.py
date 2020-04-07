@@ -72,15 +72,17 @@ class Boundary(object):
     def get_summary(self):
         """ Get summary information strings
         """
+        summary_dict = {}
+        summary_dict['Number of boundaries'] = str(self.num_of_bound)
         summary_str = []
-        summary_str.append('Number of boundaries: '+str(self.num_of_bound))
-        for n in range(self.num_of_bound):
+        for n in np.arange(self.num_of_bound):
             if self.cell_subs is not None:
                 num_cells = self.cell_subs[n][0].size
                 description = self.data_table.description[n] \
                                  + ', number of cells: '+str(num_cells)
                 summary_str.append(str(n)+'. '+description)
-        return summary_str
+        summary_dict['Boundary details'] = summary_str
+        return summary_dict
 
     def _fetch_boundary_cells(self, valid_subs, outline_subs, dem_header):
         """ To get the subsripts and id of boundary cells on the domain grid
@@ -167,7 +169,7 @@ def _setup_boundary_data_table(boundary_list, outline_boundary='open'):
     if outline_boundary == 'fall':
         hSources = np.array([[0, 0], [1, 0]])
         hUSources = np.array([[0, 0, 0], [1, 0, 0]])
-        data_table = data_table.append({'type':'open', 'extent':None,
+        data_table = data_table.append({'type':'fall', 'extent':None,
                                         'hSources':hSources,
                                         'hUSources':hUSources},
                                        ignore_index=True)
@@ -223,29 +225,32 @@ def _get_boundary_code(boudnary_data_table):
     m_h = 0  # sequence of boundary with IO source files
     m_hu = 0
     for n_seq in range(num_of_bound):
-        description1 = data_table.type[n_seq]
+        
         data_table.h_code[n_seq] = np.array([[2, 0, 0]])
-        if data_table.type[n_seq] == 'rigid':
+        bound_type = data_table.type[n_seq]
+        if bound_type == 'rigid':
             data_table.hU_code[n_seq] = np.array([[2, 2, 0]])
-        else:
-            data_table.hU_code[n_seq] = np.array([[2, 1, 0]])
+            description1 = bound_type
+        elif bound_type == 'fall':
+            h_sources = np.array([[0, 0], [1, 0]])
+            hU_sources = np.array([[0, 0, 0], [1, 0, 0]])
+            data_table.h_code[n_seq] = np.array([[3, 0, m_h]])
+            data_table.hU_code[n_seq] = np.array([[3, 0, m_hu]])
+            m_h = m_h+1
+            m_hu = m_hu+1
+            description1 = bound_type+', h and hU fixed as zero'
+        else: # open
             h_sources = data_table.hSources[n_seq]
             hU_sources = data_table.hUSources[n_seq]
+            data_table.hU_code[n_seq] = np.array([[2, 1, 0]])
+            description1 = bound_type
             if h_sources is not None:
-                h_sources = np.unique(h_sources[:, 1:])
                 data_table.h_code[n_seq] = np.array([[3, 0, m_h]]) #[3 0 m]
-                if h_sources.size == 1 and h_sources[0] == 0:
-                    description1 = description1+', h given as zero'
-                else:
-                    description1 = description1+', h given'
+                description1 = description1+', h given'
                 m_h = m_h+1
             if hU_sources is not None:
-                hU_sources = np.unique(hU_sources[:, 1:])
                 data_table.hU_code[n_seq] = np.array([[3, 0, m_hu]]) #[3 0 m]
-                if hU_sources.size == 1 and hU_sources[0] == 0:
-                    description1 = description1+', hU given as zero'
-                else:
-                    description1 = description1+', hU given'
+                description1 = description1+', hU given'
                 m_hu = m_hu+1
         description.append(description1)
     description[0] = '(outline) '+ description[0] # indicate outline boundary

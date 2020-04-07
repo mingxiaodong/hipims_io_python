@@ -32,24 +32,38 @@ class ModelSummary:
         runtime_str = hipims_obj.set_runtime(hipims_obj.times)
         birthday_str = hipims_obj.birthday.strftime('%Y-%m-%d %H:%M:%S')
         self.information_dict = {
-            '*******************':'Model summary***************',
+            '*******************':'Model summary*****************',
             'Case folder':hipims_obj.case_folder,
             'Number of Sections':str(num_of_sections),
-            'Grid size':'{:d} rows * {:d} cols, {:.2f}m resolution'.format(
+            'Grid size':'{:d} rows * {:d} cols, {:g} m resolution'.format(
                 dem_header['nrows'], dem_header['ncols'],
                 dem_header['cellsize']),
             'Domain area':'{1:,} m^2 with {0:,} valid cells'.format(
                 num_valid_cells, self.domain_area),
             'Birthday':birthday_str,
-            'Run time':runtime_str}
+            'Run time':runtime_str,
+            '------------':'----Initial Condition----------',
+            'h0':'0 for all cells',
+            'hU0x':'0 for all cells',
+            'hU0y':'0 for all cells',
+            'precipitation':'0 for all cells',
+            '--------------':'--Boundary Condition---------',
+            'Number of boundaries':'1',
+            'Boundary details': '(outline) fall, h and hU fixed as zero',
+            '---------------':'-Precipitation--------------',
+            'precipitation_mask':'0 for all cells',
+            'precipitation_source': '0',
+            '----------------':'Parameters-----------------'}
         if hasattr(hipims_obj, 'section_id'): # sub-domain object
             self.information_dict['*******************'] = \
-                'Section summary**************'
+                'Section summary****************'
             self.add_items('Domain ID', '{:d}'.format(hipims_obj.section_id))
         else:
             # add all param information if hipims_obj is not a child object
             for key, value in hipims_obj.attributes.items():
-                self.add_param_infor(key, value)
+                if key not in ['h0', 'hU0x', 'hU0y', 'precipitation',
+                               'precipitation_mask', 'precipitation_source']:
+                    self.add_param_infor(key, value)
 
     def display(self):
         """
@@ -60,7 +74,7 @@ class ModelSummary:
                 print(key+self.information_dict[key])
             else:
                 print(key+': '+self.information_dict[key])
-        print('***********************************************')
+        print('*************************************************')
 
     def write_readme(self, filename=None):
         """
@@ -70,7 +84,7 @@ class ModelSummary:
             filename = self.__case_folder+'/readme.txt'
         with open(filename, 'w') as file2write:
             for key, value in self.information_dict.items():
-                if '--------------' in key:
+                if '------------' in key:
                     file2write.write(key+value+'\n')
                 else:
                     file2write.write(key+': '+value+'\n')
@@ -93,8 +107,6 @@ class ModelSummary:
     def add_param_infor(self, param_name, param_value):
         """ Add information of hipims model parameters to the information_dict
         """
-        if '--------------' not in self.information_dict.keys():
-            self.add_items('--------------', '-----Parameters----------------')
         param_value = np.array(param_value)
         item_name = param_name
         if param_value.size == 1:
@@ -103,7 +115,7 @@ class ModelSummary:
             if param_name in ['h0', 'hU0x', 'hU0y']:
                 num_wet_cells = np.sum(param_value > 0)
                 num_wet_cells_rate = num_wet_cells/param_value.size
-                item_value = ' Wet cells ratio: {:.2f}%'.format(
+                item_value = ' nonzero ratio: {:.2f}%'.format(
                     num_wet_cells_rate*100)
             elif param_name == 'precipitation_mask':
                 if param_value.dtype != 'int32':

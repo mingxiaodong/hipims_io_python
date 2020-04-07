@@ -32,6 +32,7 @@ from datetime import datetime
 from .Raster import Raster
 from .Boundary import Boundary
 from .ModelSummary import ModelSummary
+from .spatial_analysis import sub2map
 #%% grid data for HiPIMS input format
 class InputHipims:
     """To define input files for a HiPIMS flood model case
@@ -125,8 +126,8 @@ class InputHipims:
             self._global_header = self.Raster.header        
         self.set_case_folder() # set data_folders
         self.set_device_no() # set the device number
-        self.set_boundary_condition(outline_boundary='fall')
         self._initialize_summary_obj()# initialize a Model Summary object
+        self.set_boundary_condition(outline_boundary='fall')
         
     def __str__(self):
         """
@@ -179,8 +180,9 @@ class InputHipims:
         if hasattr(self, 'Sections'):
             bound_obj._divide_domain(self)       
         if hasattr(self, 'Summary'):
-            summary_str = bound_obj.get_summary()
-            self.Summary.add_items('Boundary conditions', summary_str)
+            summary_dict = bound_obj.get_summary()
+            for key, value in summary_dict.items():
+                self.Summary.add_items(key, value)
 
     def set_parameter(self, parameter_name, parameter_value):
         """ Set grid-based parameters
@@ -502,6 +504,25 @@ class InputHipims:
 #------------------------------------------------------------------------------
 #******************************* Visualization ********************************
 #------------------------------------------------------------------------------
+    def domain_show(self, **kwargs):
+        """Show domain map of the object
+        """
+        fig, ax = self.Raster.mapshow(**kwargs)
+        cell_subs = self.Boundary.cell_subs
+        legends = []
+        num = 0
+        for cell_sub in cell_subs:
+            rows = cell_sub[0]
+            cols = cell_sub[1]
+            X, Y = sub2map(rows, cols, self.Raster.header)
+            ax.plot(X, Y, '.')
+            legends.append('Boundary '+str(num))
+            num = num+1
+        legends[0] = 'Outline boundary'
+        ax.legend(legends, edgecolor=None, facecolor=None, loc='best',
+                  fontsize='small')
+        return fig, ax
+
     def plot_rainfall_source(self,start_date=None, method='mean'):
         """ Plot time series of average rainfall rate inside the model domain
         start_date: a datetime object to give the initial date and time of rain

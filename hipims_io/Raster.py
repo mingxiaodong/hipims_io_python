@@ -73,7 +73,7 @@ class Raster(object):
                 array, header, projection = sp.arcgridread(source_file,
                                                     num_header_rows)
             self.source_file = source_file
-        else:  # try a binary file-like object
+        elif type(source_file) is bytes:  # try a binary file-like object
             array, header = sp.byte_file_read(source_file)
         extent = sp.header2extent(header)
         self.source_file = source_file
