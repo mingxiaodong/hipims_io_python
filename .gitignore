@@ -1,6 +1,6 @@
 # Compiled python modules.
 *.pyc
-
+.DS_Store
 # Setuptools distribution folder.
 /dist/
 /build/
