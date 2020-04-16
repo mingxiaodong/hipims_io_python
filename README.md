@@ -21,4 +21,4 @@ To setup an input object for HiPIMS, you will need at least a DEM file and do:
 >>> obj_in.domain_show() # show domain map
 >>> print(obj_in) # print model summary
 >>> obj_in.write_input_files() # write all input files for HiPIMS
-``` 
+```

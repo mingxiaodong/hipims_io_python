@@ -161,10 +161,10 @@ class Raster(object):
         target_ds=None
         return indexArray
     
-    def resample(self, newCellsize, method='bilinear'):
+    def resample(self, cellsize_n, method='bilinear'):
         """
         resample the raster to a new cellsize
-        newCellsize: cellsize of the new raster
+        cellsize_n: cellsize of the new raster
         method: Resampling method to use. Available methods are:
             near: nearest neighbour resampling (default, fastest algorithm, 
                                                 worst interpolation quality).        
@@ -188,10 +188,10 @@ class Raster(object):
                 value of all non-NODATA contributing pixels
         """
         cellSize = self.header['cellsize']
-        rasterXSize = self.header['ncols']
-        newRasterXSize = int(rasterXSize*cellSize/newCellsize)
+        ras_x_size = self.header['ncols']
+        newras_x_size = int(ras_x_size*cellSize/cellsize_n)
         rasterYSize = self.header['nrows']
-        newRasterYSize = int(rasterYSize*cellSize/newCellsize)
+        newRasterYSize = int(rasterYSize*cellSize/cellsize_n)
         
         g = self.to_osgeo_raster() # get original gdal dataset
         total_obs = g.RasterCount
@@ -203,14 +203,14 @@ class Raster(object):
         hires_data = self.array
         dst_ds.GetRasterBand(1).WriteArray ( hires_data )
         
-        geoT = g.GetGeoTransform()
+        geo_trans_v = g.GetGeoTransform()
         drv = gdal.GetDriverByName( "MEM" )
-        resampled_ds = drv.Create('', newRasterXSize, newRasterYSize, 1, 
+        resampled_ds = drv.Create('', newras_x_size, newRasterYSize, 1, 
                                   eType=gdal.GDT_Float32)
 
-        newGeoT = (geoT[0], newCellsize, geoT[2],
-                   geoT[3], geoT[3], -newCellsize)
-        resampled_ds.SetGeoTransform(newGeoT )
+        geo_trans_v_new = (geo_trans_v[0], cellsize_n, geo_trans_v[2],
+                           geo_trans_v[3], geo_trans_v[3], -cellsize_n)
+        resampled_ds.SetGeoTransform(geo_trans_v_new )
         resampled_ds.SetProjection (g.GetProjectionRef() )
         resampled_ds.SetMetadata ({"TotalNObs":"%d" % total_obs})
 
@@ -219,7 +219,7 @@ class Raster(object):
     
         resampled_ds.GetRasterBand(1).SetNoDataValue(self.header['NODATA_value'])
         
-        new_obj = self.__osgeoDS2raster(resampled_ds)
+        new_obj = self.__osgeo2raster(resampled_ds)
         resampled_ds = None
 
         return new_obj
@@ -436,28 +436,28 @@ class Raster(object):
         fig, ax = gs.vectorshow(self, obj_y, **kwargs)
         return fig, ax
 #%%=========================== private functions ==============================
-    def __osgeoDS2raster(self, ds):
+    def __osgeo2raster(self, obj_ds):
         """
         convert an osgeo dataset to a raster object
         """
-        array = ds.ReadAsArray()
-        geoT = ds.GetGeoTransform()
-        projection = ds.GetProjection()
-        left = geoT[0]
-        top = geoT[3]
-        cellsize = geoT[1]
-        nrows = ds.RasterYSize
-        ncols = ds.RasterXSize
+        array = obj_ds.ReadAsArray()
+        geo_trans_v = obj_ds.GetGeoTransform()
+        projection = obj_ds.GetProjection()
+        left = geo_trans_v[0]
+        top = geo_trans_v[3]
+        cellsize = geo_trans_v[1]
+        nrows = obj_ds.RasterYSize
+        ncols = obj_ds.RasterXSize
         xllcorner = left
         yllcorner = top - cellsize*nrows
-        NODATA_value = ds.GetRasterBand(1).GetNoDataValue()
+        NODATA_value = obj_ds.GetRasterBand(1).GetNoDataValue()
         if NODATA_value is None:
             NODATA_value = -9999
         header = {'ncols':ncols, 'nrows':nrows,
                   'xllcorner':xllcorner, 'yllcorner':yllcorner,                  
                   'cellsize':cellsize, 'NODATA_value':NODATA_value}
-        newObj = Raster(array=array, header=header, projection=projection)
-        return newObj
+        obj_new = Raster(array=array, header=header, projection=projection)
+        return obj_new
 
     def __set_wkt_projection(self, epsg_code):
         """
@@ -500,6 +500,8 @@ def merge(obj_origin, obj_target, resample_method='bilinear'):
     return obj_output
 
 def main():
+    """Main function
+    """
     print('Class to deal with raster data')
 
 if __name__=='__main__':

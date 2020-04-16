@@ -31,7 +31,7 @@ setup(
       keywords='hipims model IO',
       packages=find_packages(where='hipims_io'),
       include_package_data=True,
-      package_data={'sample': ['Example_DEM.asc'],},
+      package_data={'sample': ['Example_DEM.asc', 'Example_data.npy'],},
       python_requires='>=3.6')
 
 """

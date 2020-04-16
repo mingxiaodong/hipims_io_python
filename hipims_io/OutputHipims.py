@@ -8,9 +8,9 @@ Created on Wed Apr  1 23:46:54 2020
 
 @author: Xiaodong Ming
 """
-
 import os
 import datetime
+import warnings
 import pickle
 import gzip
 import numpy as np
@@ -21,6 +21,8 @@ class OutputHipims:
     """To read and analyze otuput files from a HiPIMS flood model
     Properties (public):
         case_folder: (str) the absolute path of the case folder
+        input_folder: (str|list of strings) the absolute path of the 
+            input folder(s)
         output_folder: (str|list of strings) the absolute path of the 
             output folder(s)
         number_of_sections: (int) the number of subdomains of the model
@@ -31,6 +33,8 @@ class OutputHipims:
             return gauges_pos, times, values
         read_grid_file: read grid file(s) and return a grid object
         add_gauge_results: add simulated value to the object gauge by gauge
+        add_grid_results: Read and return Raster object to attribute 
+            'grid_results'
         add_all_gauge: add all gauges as seperate records when each gauge
             position individually represent one gauge
         gauge
@@ -54,8 +58,21 @@ class OutputHipims:
             self.case_folder = input_obj.case_folder
             self.num_of_sections = input_obj.num_of_sections
             self.header = input_obj.Raster.header
+            self.dem_array = input_obj.Raster.array
+            self.output_folder = input_obj.data_folders['output']
+            self.input_folder = input_obj.data_folders['input']
             self.Summary = input_obj.Summary
-            self._set_grid_header(asc_file=header_file_tag)
+            if input_obj.num_of_sections>1:
+                header_list = []
+                output_folder = []
+                input_folder = []
+                for sub_obj in input_obj.Sections:
+                    header_list.append(sub_obj.Raster.header)
+                    output_folder.append(sub_obj.data_folders['output'])
+                    input_folder.append(sub_obj.data_folders['input'])
+                self.header_list = header_list  
+                self.output_folder = output_folder
+                self.input_folder = input_folder
         else:
             raise IOError('The first argument (input_obj) must be '+
                           'a InputHipims object')
@@ -70,9 +87,9 @@ class OutputHipims:
             values: gauge values corresponding to the gauges position
         """
         if self.num_of_sections==1:
-            output_folder = self.output_folder+'/'
+            output_folder = self.output_folder
             gauge_output_file = output_folder+file_tag+'_gauges.dat'
-            gauge_pos_file = self.input_folder+'/field/gauges_pos.dat'
+            gauge_pos_file = self.input_folder+'field/gauges_pos.dat'
             if compressed:
                 gauge_output_file = gauge_output_file+'.gz'
                 gauge_pos_file = gauge_pos_file+'.gz'
@@ -107,7 +124,7 @@ class OutputHipims:
         if compressed:
             file_tag = file_tag+'.gz'
         if self.num_of_sections==1:
-            file_name = self.output_folder+'/'+file_tag
+            file_name = self.output_folder+file_tag
             grid_array, _, _ = sp.arcgridread(file_name)
         else: # multi-GPU
             grid_array = self._combine_multi_gpu_grid_data(file_tag)
@@ -185,7 +202,7 @@ class OutputHipims:
         array_global = np.zeros(grid_shape)
         for header0, folder0 in zip(header_list, output_folder):
             ind_top, ind_bottom = _header2row_numbers(header0, header_global)
-            file_name = folder0+'/'+asc_file_name
+            file_name = folder0+asc_file_name
             array_local, _, _ = sp.arcgridread(file_name)
             array_global[ind_top:ind_bottom+1,:] = array_local
         return array_global
@@ -197,14 +214,14 @@ class OutputHipims:
         case_folder = self.case_folder
         num_of_sections = self.num_of_sections
         if num_of_sections == 1: # single gpu
-            output_folder = case_folder+'/output'
-            input_folder = case_folder+'/input'
+            output_folder = case_folder+'/output/'
+            input_folder = case_folder+'/input/'
         else: #multi-gpu model
             output_folder = []
             input_folder = []
             for i in range(num_of_sections):
-                output_folder.append(case_folder+'/'+str(i)+'/output')  
-                input_folder.append(case_folder+'/'+str(i)+'/input')
+                output_folder.append(case_folder+'/'+str(i)+'/output/')  
+                input_folder.append(case_folder+'/'+str(i)+'/input/')
         self.output_folder = output_folder
         self.input_folder = input_folder
     
@@ -219,9 +236,9 @@ class OutputHipims:
         input_folder = self.input_folder
         if num_of_sections == 1:
             if asc_file is None:
-                file_name = input_folder+'/mesh/DEM.txt'
+                file_name = input_folder+'mesh/DEM.txt'
             else:
-                file_name = output_folder+'/'+asc_file
+                file_name = output_folder+asc_file
             if os.path.exists(file_name):
                 self.header = sp.arc_header_read(file_name)
             else:
@@ -231,9 +248,9 @@ class OutputHipims:
             for i in np.arange(num_of_sections):
                 print(i)
                 if asc_file is None:
-                    file_name = input_folder[i]+'/mesh/DEM.txt'
+                    file_name = input_folder[i]+'mesh/DEM.txt'
                 else:
-                    file_name = output_folder[i]+'/'+asc_file
+                    file_name = output_folder[i]+asc_file
                 if os.path.exists(file_name):
                     header = sp.arc_header_read(file_name)
                 else:
@@ -287,7 +304,9 @@ def _combine_gauges_data_via_ind(case_folder, num_section, file_tag):
     gauges_pos_all = []
     for i in range(num_section):
         gauge_ind_file = case_folder+'/'+str(i)+'/input/field/gauges_ind.dat'
-        ind_1 = np.loadtxt(gauge_ind_file, dtype='int')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            ind_1 = np.loadtxt(gauge_ind_file, dtype='int')
         if ind_1.size>0:
             ind_max = max(ind_max, ind_1.max())
             file_name = case_folder+'/'+str(i)+'/input/field/gauges_pos.dat'

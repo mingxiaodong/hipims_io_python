@@ -126,8 +126,8 @@ class InputHipims:
             self._global_header = self.Raster.header        
         self.set_case_folder() # set data_folders
         self.set_device_no() # set the device number
-        self._initialize_summary_obj()# initialize a Model Summary object
         self.set_boundary_condition(outline_boundary='fall')
+        self._initialize_summary_obj()# initialize a Model Summary object
         
     def __str__(self):
         """
