@@ -163,8 +163,6 @@ def _check_rainfall_rate_values(rain_source, times_in_1st_col=True):
     rain_total_amount = np.trapz(y=values_mean, x=time_series) # in meter
     duration = np.ptp(time_series)
     rain_rate_mean = rain_total_amount*1000/(duration/3600) #mm/h
-    if values_max > 100 or rain_rate_mean > 50:
+    if values_max > 5000 or rain_rate_mean > 1000:
         warnings.warn('Very large rainfall rates, better check your data!')
-        print('Max rain: {:.2f} mm/h, Average rain: {:.2f} mm/h'.\
-              format(values_max, rain_rate_mean))
     return values_max, rain_rate_mean

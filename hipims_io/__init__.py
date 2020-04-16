@@ -13,7 +13,7 @@ import numpy as np
 from .InputHipims import InputHipims
 from .Raster import Raster
 
-def demo_hipims_input(set_example_inputs=True):
+def demo_input(set_example_inputs=True):
     """ A demonstration to generate a hipims input object
     """
     dem_file = pkg_resources.resource_filename(__name__,

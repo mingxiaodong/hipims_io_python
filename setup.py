@@ -16,7 +16,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
       name='hipims_io',
-      version='0.2.6',
+      version='0.2.8.4',
       description='To process input and output files of the HiPIMS model',
       url='https://github.com/mingxiaodong/hipims_io_py_package',
       author='Xiaodong Ming',
@@ -29,9 +29,12 @@ setup(
                    'Programming Language :: Python :: 3',
                    'Operating System :: OS Independent',],
       keywords='hipims model IO',
-      packages=find_packages(where='hipims_io'),
+      license='LICENSE.txt',
+      packages=find_packages(),
       include_package_data=True,
-      package_data={'sample': ['Example_DEM.asc', 'Example_data.npy'],},
+      package_data={'hipims_io': ['sample/Example_DEM.asc', 
+                                  'sample/Example_data.npy'],},
+      install_requires=['gdal', 'scipy', 'pyshp'],
       python_requires='>=3.6')
 
 """

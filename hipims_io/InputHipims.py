@@ -32,6 +32,7 @@ from datetime import datetime
 from .Raster import Raster
 from .Boundary import Boundary
 from .ModelSummary import ModelSummary
+from .ModelSummary import _check_rainfall_rate_values
 from .spatial_analysis import sub2map
 #%% grid data for HiPIMS input format
 class InputHipims:
@@ -136,7 +137,7 @@ class InputHipims:
         self.Summary.display()
         time_str = self.birthday.strftime('%Y-%m-%d %H:%M:%S')
         return  self.__class__.__name__+' object created on '+ time_str
-    __repr__ = __str__
+#    __repr__ = __str__
 #******************************************************************************
 #************************Setup the object**************************************
     def set_boundary_condition(self, boundary_list=None,
@@ -228,14 +229,15 @@ class InputHipims:
                 raise ValueError('The shape of rainfall_mask array '
                              'is not consistent with DEM')
         else:
+            rain_mask = np.array(rain_mask)
             self.attributes['precipitation_mask'] = rain_mask
         rain_mask = rain_mask.astype('int32')
         num_of_masks = rain_mask.max()+1 # starting from 0
         if rain_source.shape[1]-1 != num_of_masks:
-            warning_str= 'The column of rain source '+\
-                         'is not consistent with the number of rain masks'
+            warning_str= ('The column of rain source '
+                          'is not consistent with the number of rain masks')
             warnings.warn(warning_str)
-        _check_rainfall_rate_values(rain_source, times_in_1st_col=True)
+        _ = _check_rainfall_rate_values(rain_source, times_in_1st_col=True)
         self.Summary.add_param_infor('precipitation_mask', rain_mask)
         if rain_source is not None:
             self.attributes['precipitation_source'] = rain_source
@@ -1109,36 +1111,6 @@ def _create_io_folders(case_folder, make_dir=False):
                     'mesh':dir_mesh, 'field':dir_field}
     return data_folders
 
-def _check_rainfall_rate_values(rain_source, times_in_1st_col=True):
-    """ Check the rainfall rate values in rain source array
-    rain_source: (numpy array) rainfall source array
-          The 1st column is usually time series in seconds, from the 2nd column
-          towards end columns are rainfall rate in m/s
-    times_in_1st_col: indicate whether the first column is times
-    Return:
-        values_max: maximum rainfall rate in mm/h
-        values_mean: average rainfall rate in mm/h
-    """
-    # get the pure rainfall rate values
-    if times_in_1st_col:
-        rain_values = rain_source[:, 1:]
-        time_series = rain_source[:, 0]
-    else:
-        rain_values = rain_source
-        time_series = np.arange(rain_values.shape[0])
-    # convert the unit of rain rate values from m/s to mm/h
-    rain_values_mmh = rain_values*3600*1000
-    values_max = rain_values_mmh.max()
-    values_mean = rain_values.mean(axis=1)
-    rain_total_amount = np.trapz(y=values_mean, x=time_series) # in meter
-    duration = np.ptp(time_series)
-    rain_rate_mean = rain_total_amount*1000/(duration/3600) #mm/h
-    if values_max > 100 or rain_rate_mean > 50:
-        warnings.warn('Very large rainfall rates, better check your data!')
-        print('Max rain: {:.2f} mm/h, Average rain: {:.2f} mm/h'.\
-              format(values_max, rain_rate_mean))
-    return values_max, rain_rate_mean
-
 def _check_case_folder(case_folder):
     """ check the format of case folder
     """
@@ -1220,7 +1192,7 @@ def write_rain_source(rain_source, case_folder=None, num_of_sections=1):
     """
     rain_source = np.array(rain_source)
     # check rainfall source value to avoid very large raifall rates
-    _check_rainfall_rate_values(rain_source)
+    _ = _check_rainfall_rate_values(rain_source)
     case_folder = _check_case_folder(case_folder)
     fmt1 = '%g'  # for the first col: times in seconds
     fmt2 = '%.8e'  # for the rest array for rainfall rate m/s
