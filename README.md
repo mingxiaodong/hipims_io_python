@@ -21,16 +21,20 @@ An example of step-by-step setup a HiPIMS input object with more detailed inform
 >>> case_folder = os.getcwd() # use the current path as a case folder
 >>> obj_dem, model_data = hp.get_sample_data() # get sample data
 >>> obj_in = InputHipims(dem_data=obj_dem, num_of_sections=1, case_folder=case_folder)
->>> obj_in.set_parameter('h0', 0.5) # set a initial water depth of 0.5 m
->>> bound_list = demo_data['boundary_condition'] # define boundary condition
+# set a initial water depth of 0.5 m
+>>> obj_in.set_parameter('h0', 0.5)
+# set boundary condition
+>>> bound_list = demo_data['boundary_condition'] # with boundary information
 >>> obj_in.set_boundary_condition(bound_list, outline_boundary='fall')
-    # define and set rainfall mask and source (two rainfall sources)
+# set rainfall mask and source
 >>> rain_source = demo_data['rain_source']
 >>> obj_in.set_rainfall(rain_mask=0, rain_source=rain_source)
-    # define and set monitor positions
+# set monitor positions
 >>> gauges_pos = demo_data['gauges_pos']
->>> obj_in.set_gauges_position(gauges_pos)
+>>> obj_in.set_gauges_position(gauges_pos) 
+# display model information
 >>> obj_in.domain_show() # show domain map
 >>> print(obj_in) # print model summary
->>> obj_in.write_input_files() # write all input files for HiPIMS
+# write all input files for HiPIMS
+>>> obj_in.write_input_files() 
 ```

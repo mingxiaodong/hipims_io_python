@@ -11,7 +11,7 @@ Created on Tue Mar 31 16:20:13 2020
 import copy
 import math
 import numpy as np
-from osgeo import gdal, ogr, osr
+#from osgeo import gdal, ogr, osr
 from scipy import interpolate
 import hipims_io.spatial_analysis as sp
 import hipims_io.grid_show as gs
@@ -120,7 +120,8 @@ class Raster(object):
         """
         if isinstance(mask, str):
             shpName =  mask
-        # Open shapefile datasets        
+        # Open shapefile datasets  
+        from osgeo import ogr
         shpDriver = ogr.GetDriverByName('ESRI Shapefile')
         shpDataset = shpDriver.Open(shpName, 0) # 0=Read-only, 1=Read-Write
         layer = shpDataset.GetLayer()
@@ -143,6 +144,7 @@ class Raster(object):
             object
         return numpy array
         """
+        from osgeo import gdal, ogr
         if isinstance(shpDSName, str):
             shpDataset = ogr.Open(shpDSName)
         else:
@@ -187,6 +189,7 @@ class Raster(object):
             q3: third quartile resampling, selects the third quartile 
                 value of all non-NODATA contributing pixels
         """
+        from osgeo import gdal
         cellSize = self.header['cellsize']
         ras_x_size = self.header['ncols']
         newras_x_size = int(ras_x_size*cellSize/cellsize_n)
@@ -359,6 +362,7 @@ class Raster(object):
             an osgeo raster dataset
             or a tif filename if it is written
         """
+        from osgeo import gdal, osr
         if filename is None:
             dst_filename = ''
             driver_name = 'MEM'

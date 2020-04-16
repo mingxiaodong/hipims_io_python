@@ -18,11 +18,10 @@ Created on Tue Mar 10 15:37:28 2020
 """
 import os
 import copy
-import shapefile
 import imageio
 import numpy as np
 import matplotlib.pyplot as plt
-plt.switch_backend('agg')
+#plt.switch_backend('agg')
 import matplotlib.colors as colors
 import hipims_io.spatial_analysis as sp
 from matplotlib import cm
@@ -207,7 +206,7 @@ def make_mp4(output_file, obj_list=None, header=None, array_3d=None,
 def plot_shape_file(shp_file, color='r', linewidth=0.5, figsize=None, ax=None):
     """plot a shape file to a map axis
     """
-    
+    import shapefile
     sf = shapefile.Reader(shp_file)
     if ax is None:
         fig, ax = plt.subplots(1, figsize=figsize)
