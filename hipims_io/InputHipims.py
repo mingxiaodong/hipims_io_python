@@ -522,7 +522,7 @@ class InputHipims:
             num = num+1
         legends[0] = 'Outline boundary'
         ax.legend(legends, edgecolor=None, facecolor=None, loc='best',
-                  fontsize='small')
+                  fontsize='x-small')
         return fig, ax
 
     def plot_rainfall_source(self,start_date=None, method='mean'):
