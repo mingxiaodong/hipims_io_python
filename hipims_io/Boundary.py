@@ -87,7 +87,7 @@ class Boundary(object):
     def _fetch_boundary_cells(self, valid_subs, outline_subs, dem_header):
         """ To get the subsripts and id of boundary cells on the domain grid
         valid_subs, outline_subs, dem_header are from hipims object
-            _valid_cell_subs, _outline_cell_subs, _global_header
+            _valid_cell_subs, _outline_cell_subs
         cell_subs: (tuple)subscripts of outline boundary cells
         cell_id: (numpy vector)valid id of outline boundary cells
         """
@@ -138,11 +138,11 @@ class Boundary(object):
         """
         boundary_list = hipims_obj.Boundary.boundary_list
         outline_boundary = hipims_obj.Boundary.outline_boundary
-        header_global = hipims_obj._global_header
+        header_global = hipims_obj.header
         outline_subs = hipims_obj._outline_cell_subs
         for i in range(hipims_obj.num_of_sections):
             obj_section = hipims_obj.Sections[i]
-            header_local = obj_section.Raster.header
+            header_local = obj_section.header
             # convert global subscripts to local
             outline_subs_local = _cell_subs_convertor(
                 outline_subs, header_global, header_local, to_global=False)

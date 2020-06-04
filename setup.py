@@ -16,7 +16,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
       name='hipims_io',
-      version='0.2.9.1',
+      version='0.3.3',
       description='To process input and output files of the HiPIMS model',
       url='https://github.com/xiaxilin/hipims/tree/master/hipims_io',
       author='Xiaodong Ming',
@@ -32,7 +32,8 @@ setup(
       license='LICENSE.txt',
       packages=find_packages(),
       include_package_data=True,
-      package_data={'hipims_io': ['sample/Example_DEM.asc', 
+      package_data={'hipims_io': ['sample/Example_DEM.asc',
+                                  'sample/Example_DEM.gz',
                                   'sample/Example_data.npy'],},
 #      install_requires=['gdal', 'scipy', 'pyshp'],
       python_requires='>=3.6')

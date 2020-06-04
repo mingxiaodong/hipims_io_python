@@ -373,6 +373,8 @@ def map2sub(X, Y, header):
     Return: rows, cols in the array
     """
     # X and Y coordinate of the centre of the first cell in the array
+    X = np.array(X)
+    Y = np.array(Y)
     x0 = header['xllcorner']+0.5*header['cellsize']
     y0 = header['yllcorner']+(header['nrows']-0.5)*header['cellsize']
     rows = (y0-Y)/header['cellsize'] # row and col number starts from 0
