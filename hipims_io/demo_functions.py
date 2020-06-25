@@ -20,6 +20,7 @@ Created on Wed Apr  1 14:56:15 2020
 
 @author: Xiaodong Ming
 """
+import os
 import pkg_resources
 import numpy as np
 from .InputHipims import InputHipims
@@ -41,8 +42,7 @@ def demo_input(num_of_sections=1, set_example_inputs=True,
         __set_defaul_input(obj_in)
     # show model summary print(obj_in)
     obj_in.Summary.display()
-    fig, ax = obj_in.domain_show(relocate=True, scale_ratio=1000, 
-                                 cax_str='DEM (m)', **kwargs)
+    fig, ax = obj_in.domain_show(relocate=True, scale_ratio=1000, **kwargs)
     ax.set_title('The Upper Lee catchment')
     if figname is not None:
         fig.savefig(figname, dpi=dpi)
@@ -67,7 +67,7 @@ def demo_raster(figname=None):
     ax.set_title('The Upper Lee catchment DEM (mAOD)')
     return obj_ras
 
-def get_sample_data():
+def get_sample_data(return_path=False):
     """ Get sample data for demonstartion
     Return:
         obj_ras: a DEM raster object
@@ -76,11 +76,15 @@ def get_sample_data():
     """
     dem_file = pkg_resources.resource_filename(__name__,
                                              'sample/DEM.gz')
-    obj_ras = Raster(dem_file)
-    demo_data_file = pkg_resources.resource_filename(__name__,
-                                             'sample/Example_data.npy')
-    demo_data = np.load(demo_data_file, allow_pickle='TRUE').item()
-    return obj_ras, demo_data
+    if return_path:
+        sample_path = os.path.dirname(dem_file)
+        return sample_path
+    else:
+        obj_ras = Raster(dem_file)
+        demo_data_file = pkg_resources.resource_filename(__name__,
+                                                 'sample/Example_data.npy')
+        demo_data = np.load(demo_data_file, allow_pickle='TRUE').item()
+        return obj_ras, demo_data
     
 # =============private functions==================
 def __set_defaul_input(obj_in):
@@ -96,9 +100,9 @@ def __set_defaul_input(obj_in):
     h0[h0 < 50] = 0
     h0[h0 >= 50] = 1
     # set initial water depth (h0) and velocity (hU0x, hU0y)
-    obj_in.set_parameter('h0', h0)
-    obj_in.set_parameter('hU0x', h0*0.0001)
-    obj_in.set_parameter('hU0y', h0*0.0002)
+    obj_in.set_initial_condition('h0', h0)
+    obj_in.set_initial_condition('hU0x', h0*0.0001)
+    obj_in.set_initial_condition('hU0y', h0*0.0002)
     # define boundary condition
     bound_list = demo_data['boundary_condition']
     obj_in.set_boundary_condition(bound_list, outline_boundary='fall')
