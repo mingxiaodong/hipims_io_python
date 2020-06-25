@@ -1,6 +1,6 @@
 hipims_io
 --------
-Python code to process input and output files of [HiPIMS flood model](https://github.com/HEMLab/hipims). This code follows [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html).
+Python code to process input and output files of [HiPIMS flood model](https://pypi.org/project/hipims/). This code follows [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html).
 
 Python version: >=3.6. To use the full function of this package for processing raster and shapefile, gdal and pyshp are required.
 
@@ -11,7 +11,7 @@ pip install hipims_io
 A quick demonstration to setup a HiPIMS input object with a sample DEM:
 ```
 import hipims_io as hp
-obj_in = hp.demo_input() # create an input object and show domain map
+obj_in = hpio.demo_input() # create an input object and show domain map
 ```
 A quick demonstration to setup a HiPIMS input object with a data path contaning the following files:
 - DEM.gz/.asc/.tif [essential file, in projected crs]
@@ -20,8 +20,14 @@ A quick demonstration to setup a HiPIMS input object with a data path contaning 
 - landcover.gz/.asc/.tif [optional file for setting landcover-based parameters, having the same crs with DEM]
 
 ```
-import hipims_io as hp
-obj_in = hp.demo_input() # create an input object and show domain map
+import os
+import hipims_io as hpio
+from hipims_io.demo_functions import get_sample_data
+data_path = get_sample_data(return_path=True) # get the path of sample data
+case_folder = os.path.join(os.getcwd(), 'hipims_case') #create a case folder in the current directory
+obj_in = hpio.InputHipims(case_folder=case_folder, num_of_sections=1, 
+                          data_path=data_path) # create input object
+print(obj_in) # show case information
 ```
 
 A step-by-step tutorial to setup a HiPIMS input object with sample data:
@@ -29,16 +35,16 @@ A step-by-step tutorial to setup a HiPIMS input object with sample data:
 
 ```
 import os
-import hipims_io as hp
+import hipims_io as hpio
 
 
-obj_dem, model_data = hp.get_sample_data() # get sample data
-case_folder = os.getcwd() # use the current path as a case folder
+obj_dem, model_data = hpio.get_sample_data() # get sample data
+case_folder = os.path.join(os.getcwd(), 'hipims_case') #create a case folder in the current directory
 # create a single-gpu input object
-obj_in = hp.InputHipims(dem_data=obj_dem, num_of_sections=1, case_folder=case_folder)
+obj_in = hpio.InputHipims(dem_data=obj_dem, num_of_sections=1, case_folder=case_folder)
 
 # set a initial water depth of 0.5 m
-obj_in.set_parameter('h0', 0.5)
+obj_in.set_initial_condition('h0', 0.5)
 
 # set boundary condition
 bound_list = model_data['boundary_condition'] # with boundary information
@@ -59,6 +65,4 @@ print(obj_in) # print model summary
 # write all input files for HiPIMS to the case folder
 obj_in.write_input_files() 
 
-# save input object
-obj_in.save_object('demo_input')
 ```
