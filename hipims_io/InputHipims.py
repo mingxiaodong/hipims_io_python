@@ -25,19 +25,18 @@ Structure:
            set_boundary_condition, set_parameter, set_rainfall, 
            set_gauges_position, set_case_folder, set_runtime, set_device_no,
            add_user_defined_parameter, set_num_of_sections
-
-
 """
 __author__ = "Xiaodong Ming"
 import os
 import shutil
 import copy
-import scipy.signal
 import numpy as np
 from datetime import datetime
 from .Raster import Raster
 from .Boundary import Boundary
-from .ModelSummary import ModelSummary
+from .Rainfall import Rainfall
+from .Landcover import Landcover
+from .Summary import Summary
 from .spatial_analysis import sub2map
 from . import indep_functions as indep_f
 from . import rainfall_processing as rp
@@ -49,18 +48,52 @@ class InputHipims:
         case_folder: (str) the absolute path of the case folder
         data_folders: (dict) paths for data folders(input, output, mesh, field)
         num_of_sections: (scalar) number of GPUs to run the model
-        Boundary: a boundary object of class Boundary to provide boundary cells
-            location, ID, type, and source data.
-        DEM: a Raster object to provide DEM data [alias: Raster].
         shape: shape of the DEM array
         header: (dict) header of the DEM grid
-        Summary: a ModelSummary object to record model information
-        Sections: a list of objects of child-class InputHipimsSub
-        attributes_default: (dict) default model attribute names and values
+        __attributes_default: (dict) default model attribute names and values
         attributes: (dict) model attribute names and values
         times:  (list/numpy array) of four values reprenting model run time in
                 seconds: start, end, output interval, backup interval
         device_no: (int) the gpu device id(s) to run model
+        landcover_args: dict, argument to set grid parameters with Landcover
+            object. Keys are grid parameter names. Value is a dict with three
+            keys: param_value, land_value, default_value. Refer to Landcover
+            for more details.
+        -------
+        Objects
+        -------
+        Sections: a list of objects of child-class InputHipimsSub
+        Boundary: To create a Boundary object for boundary conditions
+            The object contains
+                  outline_boundary, a dataframe of boundary type, extent,
+                  source data, code, ect..., and a boundary subscrpits
+                  tuple (cell_subs).For multi-GPU case, a boundary subscrpits
+                  tuple (cell_subs_l) based on sub-grids will be created for 
+                  each section
+            outline_boundary: (str) 'open'|'rigid', default outline boundary is
+                open and both h and hU are set as zero
+            boundary_list: (list of dicts), each dict contain keys (polyPoints,
+                type, h, hU) to define a IO boundary's position, type, and
+                Input-Output (IO) sources timeseries. Keys including:
+                1.polyPoints is a numpy array giving X(1st col) and Y(2nd col)
+                    coordinates of points to define the position of a boundary.
+                    An empty polyPoints means outline boundary.
+                2.type: 'open'(flow out flatly), 'rigid'(no outlet),
+                        'fall'(water flow out like a fall)
+                3.h: a two-col numpy array. The 1st col is time(s). The 2nd col
+                     is water depth(m)
+                4.hU: a two-col numpy array. The 1st col is time(s). The 2nd
+                    col is discharge(m3/s) or a three-col numpy array, the 2nd
+                    col and the 3rd col are velocities(m/s) in x and y
+                    direction, respectively.
+            cell_subs: (list of tuple) subsripts of cells for each boundary
+            cell_id: (list of vector) valid id of cells for each boundary
+        DEM: a Raster object to provide DEM data [alias: Raster].
+        Rainfall: a Rainfall object to provide rainfall data
+        Landcover: a Landcover object to provide landcover data for setting
+            gridded parameters
+            
+        Summary: a Summary object to record model information
     Properties (Private):
         _valid_cell_subs: (tuple, int numpy) two numpy array indicating rows
             and cols of valid cells on the DEM array and sorted based on the
@@ -80,17 +113,6 @@ class InputHipims:
             is given, it will be converted to velocities in x and y directions
         write_gauges_position: write coordinates of monitoring gauges
         write_halo_file: write overlayed cell ID for multiple GPU cases
-    Methods(protected):
-        _get_cell_subs:
-        __divide_grid: split model domain:
-        _get_boundary_id_code_array:
-        _get_vector_value:
-        _write_grid_files:
-        _initialize_summary_obj:
-        (Private only for base class)
-        __write_boundary_conditions:
-        __write_gauge_pos:
-        __copy_to_all_sections:
     Classes:
         InputHipimsSub: child class of InputHiPIMS, provide information
             of each sub-domain
@@ -100,7 +122,7 @@ class InputHipims:
 #%%****************************************************************************
 #***************************initialize an object*******************************
     # default parameters
-    attributes_default = {'h0':0, 'hU0x':0, 'hU0y':0,
+    __attributes_default = {'h0':0, 'hU0x':0, 'hU0y':0,
                           'precipitation':0,
                           'precipitation_mask':0,
                           'precipitation_source':np.array([[0, 0], [1, 0]]),
@@ -108,28 +130,41 @@ class InputHipims:
                           'sewer_sink':0,
                           'cumulative_depth':0, 'hydraulic_conductivity':0,
                           'capillary_head':0, 'water_content_diff':0,
-                          'gauges_pos':np.array([[0, 0]])}
-    grid_files = ['z', 'h', 'hU', 'precipitation_mask',
+                          'gauges_pos':np.array([[0, 0], [1, 1]])}
+    __grid_files = ['z', 'h', 'hU', 'precipitation_mask',
                   'manning', 'sewer_sink', 'precipitation',
                   'cumulative_depth', 'hydraulic_conductivity',
                   'capillary_head', 'water_content_diff']
-    def __init__(self, dem_data, num_of_sections=1, case_folder=None):
+    gridded_parameter_keys = ['h0', 'hU0x', 'hU0y', 'manning', 'sewer_sink',
+                           'cumulative_depth', 'hydraulic_conductivity',
+                           'capillary_head', 'water_content_diff']
+    def __init__(self, dem_data=None, num_of_sections=1, case_folder=None,
+                 data_path=None):
         """
         dem_data: (Raster object) or (str) provides file name of the DEM data
+        data_folder: a path contain at least a DEM file named as 'DEM' with a
+            suffix .gz|.asc|.tif. 'landuse' and 'rain_mask' can also be read if
+            these files were given with one of the three suffix
         """
+        self.attributes = InputHipims.__attributes_default.copy()
+        self.num_of_sections = num_of_sections
         self.birthday = datetime.now()
-        if type(dem_data) is str:
-            self.DEM = Raster(dem_data) # create Raster object
-        elif type(dem_data) is Raster:
-            self.DEM = dem_data
+        if case_folder is None:
+            case_folder = os.getcwd()
+        self._case_folder = case_folder
+        if data_path is not None:
+            self.data_path = data_path
+            self._setup_by_files(data_path)
+        else:
+            if type(dem_data) is str:
+                self.DEM = Raster(dem_data) # create Raster object
+            elif type(dem_data) is Raster:
+                self.DEM = dem_data
         self.Raster = self.DEM
         self.shape = self.DEM.shape
         self.header = self.DEM.header
-        if case_folder is None:
-            case_folder = os.getcwd()
-        self.case_folder = case_folder
-        self.num_of_sections = num_of_sections
-        self.attributes = InputHipims.attributes_default.copy()        
+        if not hasattr(self, 'Rainfall'):
+            self.set_rainfall()
         _ = self.set_runtime()
         # get row and col index of all cells on DEM grid
         self._get_cell_subs()  # add _valid_cell_subs and _outline_cell_subs
@@ -142,6 +177,7 @@ class InputHipims:
         self.set_case_folder() # set data_folders
         self.set_device_no() # set the device number
         self.set_boundary_condition(outline_boundary='fall')
+        self.set_gauges_position()
         self._initialize_summary_obj()# initialize a Model Summary object
         
     def __str__(self):
@@ -152,35 +188,23 @@ class InputHipims:
         time_str = self.birthday.strftime('%Y-%m-%d %H:%M:%S')
         return  self.__class__.__name__+' object created on '+ time_str
 #    __repr__ = __str__
-#%%****************************************************************************
-#************************Setup the object**************************************
+#******************************************************************************
+#%%**********************Get object attributes**************************************
+    def get_case_folder(self):
+        """ Return _case_folder
+        """
+        return self._case_folder
+
+    def get_data_folders(self):
+        """ Return _case_folder
+        """
+        return self._data_folders
+
+#%%**********************Setup the object**************************************
     def set_boundary_condition(self, boundary_list=None,
                                outline_boundary='fall'):
         """To create a Boundary object for boundary conditions
-        The object contains
-              outline_boundary, a dataframe of boundary type, extent, source
-              data, code, ect..., and a boundary subscrpits
-              tuple (cell_subs).For multi-GPU case, a boundary subscrpits tuple
-              (cell_subs_l) based on sub-grids will be created for each section
-        outline_boundary: (str) 'open'|'rigid', default outline boundary is
-            open and both h and hU are set as zero
-        boundary_list: (list of dicts), each dict contain keys (polyPoints,
-            type, h, hU) to define a IO boundary's position, type, and
-            Input-Output (IO) sources timeseries. Keys including:
-            1.polyPoints is a numpy array giving X(1st col) and Y(2nd col)
-                coordinates of points to define the position of a boundary.
-                An empty polyPoints means outline boundary.
-            2.type: 'open'(flow out flatly), 'rigid'(no outlet),
-                    'fall'(water flow out like a fall)
-            3.h: a two-col numpy array. The 1st col is time(s). The 2nd col is
-                water depth(m)
-            4.hU: a two-col numpy array. The 1st col is time(s). The 2nd col is
-                discharge(m3/s) or a three-col numpy array, the 2nd col and the
-                3rd col are velocities(m/s) in x and y direction, respectively.
-        cell_subs: (list of tuple) subsripts of cells for each boundary
-        cell_id: (list of vector) valid id of cells for each boundary
         """
-        # initialize a Boundary object
         if boundary_list is None and hasattr(self, 'Boundary'):
             boundary_list = self.Boundary.boundary_list
         bound_obj = Boundary(boundary_list, outline_boundary)
@@ -195,20 +219,14 @@ class InputHipims:
         if hasattr(self, 'Sections'):
             bound_obj._divide_domain(self)       
         if hasattr(self, 'Summary'):
-            summary_dict = bound_obj.get_summary()
-            for key, value in summary_dict.items():
-                self.Summary.add_items(key, value)
+            self.Summary.set_boundary_attr(self.Boundary)
 
     def set_parameter(self, parameter_name, parameter_value):
-        """ Set grid-based parameters
-        parameter_name: (str) including: h0, hU0x, hU0y, manning,
-            precipitation_mask, sewer_sink, cumulative_depth,
-            hydraulic_conductivity, capillary_head, water_content_diff
-        parameter_value: (scalar)|(numpy array) with the same size of DEM. All
-            parameter values are given to the global grid and can be divided
-            to local grids in writing process if multiple sections are defined.
+        """ [Obsolete] Set grid-based parameters 
+        parameter_name: (str) from gridded_parameter_keys
+        parameter_value: (scalar)|(numpy array) with the same size of DEM.
         """
-        if parameter_name not in InputHipims.attributes_default.keys():
+        if parameter_name not in InputHipims.__attributes_default.keys():
             raise ValueError('Parameter is not recognized: '+parameter_name)
         if type(parameter_value) is np.ndarray:
             if parameter_value.shape != self.shape:
@@ -219,45 +237,64 @@ class InputHipims:
             raise ValueError('The parameter value must be either '
                              'a scalar or an numpy array')
         self.attributes[parameter_name] = parameter_value
-        # renew summary information
-        self.Summary.add_param_infor(parameter_name, parameter_value)
+        self.Summary.set_gridded_params(**{parameter_name:parameter_value})
+    
+    def set_grid_parameter(self, **kwargs):
+        """ Set grid parameter with Landcover object as name=value
+        kwargs: Keyword Arguments Specified by a Dictionary
+        keyword: name, from grid_parameter_keys
+        value:  1. scalar, a uniform parameter value
+                2. array, gridded parameter value with the same size of DEM
+                3. dict, contain param_value, land_value, default_value=0
+        Return: save a parameter dictionary
+        """
+        if not hasattr(self, 'landcover_args'):
+            # save arguments to call Landcover.to_grid_parameter()
+            self.landcover_args = {}
+        for keyword, value in kwargs.items():
+            if keyword not in self.gridded_parameter_keys:
+                raise ValueError('Parameter is not recognized: '+keyword)
+            if type(value) is np.ndarray:
+                if value.shape != self.shape:
+                    raise ValueError('The array of the parameter '+keyword+
+                           ' should have the same shape with the DEM array')
+                else:
+                    self.attributes[keyword] = value
+            elif np.isscalar(value):
+                self.attributes[keyword] = value
+            elif type(value) is dict:
+                self.landcover_args[keyword] = value
+                value_array = self.Landcover.to_grid_parameter(**value)
+                value = value_array
+            else:
+                raise ValueError(keyword+' must be a scalar, array or dict')
+            self.Summary.set_gridded_params(**{keyword:value})
 
     def set_rainfall(self, rain_mask=None, rain_source=None):
         """ Set rainfall mask and rainfall source
-        rain_mask: numpy int array withe the same size of DEM, each mask
-                 value indicates one rainfall source 
-                 or a Raster object or a string of mask filename
+        rain_mask: str [filename of a Raster endswith .gz/asc/tif]
+                   numpy int array with the same shape with DEM array
+                   a Raster object
         rain_source: numpy array the 1st column is time in seconds, 2nd to
-             the end columns are rainfall rates in m/s. The number of columns
-             in rainfall_source should be equal to the number of mask values
-             plus one (the time column)
+             the end columns are rainfall rates in m/s.
+                     str [filename of a csv file for rainfall source data]
         """
+        if not hasattr(self, 'Rainfall'):
+            self.Rainfall = Rainfall(self.attributes['precipitation_mask'], 
+                                     self.attributes['precipitation_source'],
+                                     dem_ras=self.DEM)
         # set rain mask
-        if rain_mask is None: # use default or pre-defined value
+        if (rain_mask is None) & (rain_source is None): 
+            # use default or pre-defined value
             rain_mask = self.attributes['precipitation_mask']
-            rain_mask = np.array(rain_mask).astype('int32')
-        elif type(rain_mask) is Raster:
-            mask_on_dem = _generate_mask_for_DEM(rain_mask, self.DEM)
-            rain_mask = mask_on_dem.array
-            self.attributes['precipitation_mask'] = rain_mask
-        else: # numpy array or scalar
-            rain_mask = np.array(rain_mask).astype('int32')
-            if rain_mask.size > 1 & rain_mask.shape != self.shape:
-                raise ValueError('The shape of rainfall_mask array '
-                             'is not consistent with DEM')
-            else:
-                self.attributes['precipitation_mask'] = rain_mask
-        self.Summary.add_param_infor('precipitation_mask', rain_mask)
-        # set rain source
-        _ = rp._check_rainfall_rate_values(rain_source, times_in_1st_col=True)
+            rain_source = self.attributes['precipitation_source']
+            self.Rainfall = Rainfall(rain_mask, rain_source, dem_ras=self.DEM)
+        if rain_mask is not None:
+            self.Rainfall.set_mask(rain_mask, dem_ras=self.DEM)
         if rain_source is not None:
-            self.attributes['precipitation_source'] = rain_source
-            rain_mask_unique = np.unique(rain_mask).flatten()
-            rain_mask_unique = rain_mask_unique.astype('int32')
-            rain_source_valid = np.c_[rain_source[:,0],
-                                      rain_source[:,rain_mask_unique+1]]
-            self.Summary.add_param_infor('precipitation_source', 
-                                         rain_source_valid)
+            self.Rainfall.set_source(rain_source)
+        if hasattr(self, 'Summary'):
+            self.Summary.rain_attr = self.Rainfall.attrs
 
     def set_gauges_position(self, gauges_pos=None):
         """Set coordinates of monitoring gauges
@@ -269,9 +306,9 @@ class InputHipims:
         if gauges_pos.shape[1] != 2:
             raise ValueError('The gauges_pos arraymust have two columns')
         self.attributes['gauges_pos'] = gauges_pos
-        self.Summary.add_param_infor('gauges_pos', gauges_pos)
+#        self.Summary.add_param_infor('gauges_pos', gauges_pos)
         # for multi_GPU, divide gauges based on the extent of each section
-        if self.num_of_sections > 1:
+        if hasattr(self, 'Sections'):
             pos_X = gauges_pos[:,0]
             pos_Y = gauges_pos[:,1]
             for obj_section in self.Sections:
@@ -282,6 +319,8 @@ class InputHipims:
                 ind = ind[0]
                 obj_section.attributes['gauges_pos'] = gauges_pos[ind,:]
                 obj_section.attributes['gauges_ind'] = ind
+        if hasattr(self, 'Summary'):
+            self.Summary.set_model_attr(gauges_pos=gauges_pos)
 
     def set_case_folder(self, new_folder=None, make_dir=False):
         """ Initialize, renew, or create case and data folders
@@ -290,9 +329,9 @@ class InputHipims:
         """
         # to change case_folder
         if new_folder is None:
-            new_folder = self.case_folder
-        self.case_folder = new_folder
-        self.data_folders = _create_io_folders(self.case_folder,
+            new_folder = self._case_folder
+        self._case_folder = new_folder
+        self._data_folders = indep_f._create_io_folders(self._case_folder,
                                                make_dir)
         # for multiple GPUs
         if hasattr(self, 'Sections'):
@@ -300,7 +339,8 @@ class InputHipims:
                 sub_case_folder = new_folder+'/'+str(obj.section_id)
                 obj.set_case_folder(sub_case_folder)                        
         if hasattr(self, 'Summary'):
-            self.Summary.set_param('Case folder', self.case_folder)
+            self.Summary.set_model_attr(case_folder=self._case_folder)
+#            self.Summary.set_param('Case folder', self._case_folder)
 
     def set_runtime(self, runtime=None):
         """set runtime of the model
@@ -315,7 +355,8 @@ class InputHipims:
                        '{3}-backup interval')
         runtime_str = runtime_str.format(*runtime)
         if hasattr(self, 'Summary'):
-            self.Summary.add_items('Runtime(s)', runtime_str)
+#            self.Summary.add_items('Runtime(s)', runtime_str)
+            self.Summary.set_model_attr(run_time=self.times)
         return runtime_str
 
     def set_device_no(self, device_no=None):
@@ -332,11 +373,11 @@ class InputHipims:
         param_name: (str) name the parameter and the input file name as well
         param_value: (scalar) or (numpy arary) with the same size of DEM array
         """
-        if param_name not in InputHipims.grid_files:
-            InputHipims.grid_files.append(param_name)
+        if param_name not in InputHipims.__grid_files:
+            InputHipims.__grid_files.append(param_name)
         self.attributes[param_name] = param_value
         print(param_name+ 'is added to the InputHipims object')
-        self.Summary.add_param_infor(param_name, param_value)
+#        self.Summary.add_param_infor(param_name, param_value)
     
     def set_num_of_sections(self, num_of_sections):
         """ set the number of divided sections to run a case
@@ -354,12 +395,12 @@ class InputHipims:
             self.set_boundary_condition(outline_boundary=outline_boundary)
             self.set_gauges_position()
             self.Boundary._divide_domain(self)
-        self.set_case_folder(self.case_folder)
+        self.set_case_folder(self._case_folder)
         self.birthday = datetime.now()
-        self.Summary.set_param('Number of Sections', str(num_of_sections))
-        time_str = self.birthday.strftime('%Y-%m-%d %H:%M:%S')
-        self.Summary.set_param('Birthday', time_str)
-        
+#        self.Summary.set_param('Number of Sections', str(num_of_sections))
+        self.Summary.set_model_attr(num_GPU=self.num_of_sections)
+#        time_str = self.birthday.strftime('%Y-%m-%d %H:%M:%S')
+#        self.Summary.set_param('Birthday', time_str)
 
     def decomposite_domain(self, num_of_sections):
         """ divide a single-gpu case into a multi-gpu case
@@ -383,14 +424,9 @@ class InputHipims:
         To classify the input files and call functions needed to write each
             input files
         file_tag: str or list of str including
-                  ['z', 'h', 'hU', 'manning', 'sewer_sink',
-                        'cumulative_depth', 'hydraulic_conductivity',
-                        'capillary_head', 'water_content_diff',
-                        'precipitation_mask', 'precipitation_source',
-                        'boundary_condition', 'gauges_pos']
         """
         self._make_data_dirs()
-        grid_files = InputHipims.grid_files
+        grid_files = InputHipims.__grid_files
         if file_tag is None or file_tag == 'all': # write all files
             file_tag_list = ['z', 'h', 'hU', 'precipitation',
                              'manning', 'sewer_sink',
@@ -429,7 +465,7 @@ class InputHipims:
         file_tag: the pure name of a grid-based file
         """
         self._make_data_dirs()
-        grid_files = InputHipims.grid_files
+        grid_files = InputHipims.__grid_files
         if file_tag not in grid_files:
             raise ValueError(file_tag+' is not a grid-based file')
         if is_single_gpu or self.num_of_sections == 1:
@@ -437,7 +473,8 @@ class InputHipims:
             self._write_grid_files(file_tag, is_multi_gpu=False)
         else:
             self._write_grid_files(file_tag, is_multi_gpu=True)
-        self.Summary.write_readme(self.case_folder+'/readme.txt')
+        readme_filename = os.path.join(self._case_folder,'readme.txt')
+        self.Summary.to_json(readme_filename)
         print(file_tag+' created')
 
     def write_boundary_conditions(self):
@@ -447,13 +484,14 @@ class InputHipims:
         """
         self._make_data_dirs()
         if self.num_of_sections > 1:  # multiple-GPU
-            field_dir = self.Sections[0].data_folders['field']
+            field_dir = self.Sections[0]._data_folders['field']
             file_names_list = self.__write_boundary_conditions(field_dir)
             self.__copy_to_all_sections(file_names_list)
         else:  # single-GPU
-            field_dir = self.data_folders['field']
+            field_dir = self._data_folders['field']
             self.__write_boundary_conditions(field_dir)
-        self.Summary.write_readme(self.case_folder+'/readme.txt')
+        readme_filename = os.path.join(self._case_folder,'readme.txt')
+        self.Summary.to_json(readme_filename)
         print('boundary condition files created')
 
     def write_rainfall_source(self):
@@ -461,11 +499,15 @@ class InputHipims:
         rainfall mask can be written by function write_grid_files
         """
         self._make_data_dirs()
-        rain_source = self.attributes['precipitation_source']
-        case_folder = self.case_folder
+        if hasattr(self, 'Rainfall'):
+            rain_source = self.Rainfall.get_source_array()
+        else:
+            rain_source = self.attributes['precipitation_source']
+        case_folder = self._case_folder
         num_of_sections = self.num_of_sections
         indep_f.write_rain_source(rain_source, case_folder, num_of_sections)
-        self.Summary.write_readme(self.case_folder+'/readme.txt')
+        readme_filename = os.path.join(self._case_folder,'readme.txt')
+        self.Summary.to_json(readme_filename)
 
     def write_gauges_position(self, gauges_pos=None):
         """ Write the gauges position file
@@ -476,20 +518,21 @@ class InputHipims:
             self.set_gauges_position(np.array(gauges_pos))
         if self.num_of_sections > 1:  # multiple-GPU
             for obj_section in self.Sections:
-                field_dir = obj_section.data_folders['field']
+                field_dir = obj_section._data_folders['field']
                 obj_section.__write_gauge_ind(field_dir)
                 obj_section.__write_gauge_pos(field_dir)
         else:  # single-GPU
-            field_dir = self.data_folders['field']
+            field_dir = self._data_folders['field']
             self.__write_gauge_pos(field_dir)
-        self.Summary.write_readme(self.case_folder+'/readme.txt')
+        readme_filename = os.path.join(self._case_folder,'readme.txt')
+        self.Summary.to_json(readme_filename)
         print('gauges_pos.dat created')
 
     def write_halo_file(self):
         """ Write overlayed cell IDs
         """
         num_section = self.num_of_sections
-        case_folder = self.case_folder
+        case_folder = self._case_folder
         if not case_folder.endswith('/'):
             case_folder = case_folder+'/'
         file_name = case_folder+'halo.dat'
@@ -516,30 +559,32 @@ class InputHipims:
         """
         self._make_data_dirs()
         if is_single_gpu is True or self.num_of_sections == 1:
-            file_name = self.data_folders['mesh']+'DEM.txt'
+            file_name = os.path.join(self._data_folders['mesh'],
+                                     'DEM.txt')
             self.DEM.write_asc(file_name)
         else:
             for obj_section in self.Sections:
-                file_name = obj_section.data_folders['mesh']+'DEM.txt'
+                file_name = os.path.join(obj_section._data_folders['mesh'],
+                                         'DEM.txt')
                 obj_section.DEM.write_asc(file_name)
-        self.Summary.write_readme(self.case_folder+'/readme.txt')
-#        print('DEM.txt created')
+        readme_filename = os.path.join(self._case_folder,'readme.txt')
+        self.Summary.to_json(readme_filename)
     
     def write_runtime_file(self, time_values=None):
         """ write times_setup.dat file
         """
         if time_values is None:
             time_values = self.times
-        indep_f.write_times_setup(self.case_folder, self.num_of_sections,
+        indep_f.write_times_setup(self._case_folder, self.num_of_sections,
                                   time_values)
-        self.Summary.write_readme(self.case_folder+'/readme.txt')
+        self.Summary.to_json(self._case_folder+'/readme.txt')
     
     def write_device_file(self, device_no=None):
         """Create device_setup.dat for choosing GPU number to run the model
         """
         if device_no is None:
             device_no = self.device_no
-        indep_f.write_device_setup(self.case_folder, self.num_of_sections,
+        indep_f.write_device_setup(self._case_folder, self.num_of_sections,
                                    device_no)
 
     def save_object(self, file_name):
@@ -549,7 +594,8 @@ class InputHipims:
 
 #%%****************************************************************************
 #******************************* Visualization ********************************
-    def domain_show(self, figname=None, dpi=None, **kwargs):
+    def domain_show(self, figname=None, dpi=None, title='Domain Map',
+                    **kwargs):
         """Show domain map of the object
         """
         obj_dem = copy.deepcopy(self.DEM)
@@ -557,7 +603,7 @@ class InputHipims:
             for obj_sub in self.Sections:
                 overlayed_subs = obj_sub.overlayed_cell_subs_global
                 obj_dem.array[overlayed_subs] = np.nan            
-        fig, ax = obj_dem.mapshow(**kwargs)
+        fig, ax = obj_dem.mapshow(title=title, cax_str='DEM(m)', **kwargs)
         cell_subs = self.Boundary.cell_subs
         legends = []
         num = 0
@@ -575,17 +621,15 @@ class InputHipims:
             fig.savefig(figname, dpi=dpi)
         return fig, ax
     
-    def plot_rainfall_map(self, cellsize=None, method='sum', **kw):
-        """
+    def plot_rainfall_map(self, figname=None, method='sum', **kw):
+        """plot rainfall map within model domain
         """
         rain_source = self.attributes['precipitation_source']
         rain_mask = self.attributes['precipitation_mask']
-        if rain_mask.size == 1:
-            rain_mask = self.DEM.array*0+rain_mask
+        rain_mask = self.DEM.array*0+rain_mask
         rain_mask_obj = Raster(array=rain_mask, header=self.header)
-        rain_map_obj = rp.get_spatial_map(rain_source, rain_mask_obj, 
-                                          cellsize, method)
-        rain_map_obj.mapshow(**kw)
+        rain_map_obj = rp.get_spatial_map(rain_source, rain_mask_obj, figname,
+                                          method, **kw)
         return rain_map_obj
 
     def plot_rainfall_curve(self, start_date=None, method='mean', **kw):
@@ -597,10 +641,7 @@ class InputHipims:
         rain_source = self.attributes['precipitation_source']
         rain_mask = self.attributes['precipitation_mask']
         rain_mask = np.array(rain_mask)
-        if rain_mask.size == 1:
-            rain_mask = self.DEM.array*0+rain_mask
-        else:
-            rain_mask[np.isnan(self.DEM.array)] = np.nan
+        rain_mask = self.DEM.array*0+rain_mask
         plot_data = rp.get_time_series(rain_source, rain_mask, start_date, 
                                     method=method)
         rp.plot_time_series(plot_data, method=method, **kw)
@@ -617,7 +658,7 @@ class InputHipims:
         """
         if dem_array is None:
             dem_array = self.DEM.array
-        valid_id, outline_id = _get_cell_id_array(dem_array)
+        valid_id, outline_id = indep_f._get_cell_id_array(dem_array)
         subs = np.where(~np.isnan(valid_id))
         id_vector = valid_id[subs]
         # sort the subscripts according to cell id values
@@ -643,22 +684,23 @@ class InputHipims:
         num_of_sections = self.num_of_sections
         dem_header = self.header
         # subscripts of the split row [0, 1,...] from bottom to top
-        split_rows = _get_split_rows(self.DEM.array, num_of_sections)
+        split_rows = indep_f._get_split_rows(self.DEM.array, num_of_sections)
         array_local, header_local = \
-            _split_array_by_rows(self.DEM.array, dem_header, split_rows)
+            indep_f._split_array_by_rows(self.DEM.array, dem_header,
+                                         split_rows)
         # to receive InputHipimsSub objects for sections
         Sections = []
         section_sequence = np.arange(num_of_sections)
         header_global = dem_header
         for i in section_sequence:  # from bottom to top
-            case_folder = self.case_folder+'/'+str(i)
+            case_folder = self._case_folder+'/'+str(i)
             # create a sub object of InputHipims
             sub_hipims = InputHipimsSub(array_local[i], header_local[i],
                                         case_folder, num_of_sections)
             # get valid_cell_subs on the global grid
             valid_cell_subs = sub_hipims._valid_cell_subs
             valid_subs_global = \
-                 _cell_subs_convertor(valid_cell_subs, header_global,
+                 indep_f._cell_subs_convertor(valid_cell_subs, header_global,
                                       header_local[i], to_global=True)
             sub_hipims.valid_subs_global = valid_subs_global
             # record section sequence number
@@ -691,7 +733,6 @@ class InputHipims:
         self.Sections = Sections
         self._initialize_summary_obj()# get a Model Summary object
 
-    # only for global object
     def _get_vector_value(self, attribute_name, is_multi_gpu=True,
                           add_initial_water=True):
         """ Generate a single vector for values in each grid cell sorted based
@@ -736,8 +777,21 @@ class InputHipims:
             grid_values1 = add_water_on_io_cells(self.Boundary, grid_values1,
                                                  'hUSources', add_value)
             grid_values = [grid_values0, grid_values1]
+        elif attribute_name == 'precipitation_mask':
+            if hasattr(self, 'Rainfall'):
+                grid_values = self.Rainfall.get_mask_array()
+            else:
+                grid_values = grid_values+self.attributes[attribute_name]
         else:
-            grid_values = grid_values+self.attributes[attribute_name]
+            if hasattr(self, 'landcover_args'):
+                arg_dicts = self.landcover_args
+                if attribute_name in arg_dicts.keys():
+                    arg_dict = arg_dicts[attribute_name]
+                    grid_values = self.Landcover.to_grid_parameter(**arg_dict)
+                else:
+                    grid_values = grid_values+self.attributes[attribute_name]
+            else:
+                grid_values = grid_values+self.attributes[attribute_name]
 
         def grid_to_vect(grid_values, cell_subs):
             """ Convert grid values to 1 or 2 col vector values
@@ -801,7 +855,7 @@ class InputHipims:
     def _initialize_summary_obj(self):
         """ Initialize the model summary object
         """
-        summary_obj = ModelSummary(self)
+        summary_obj = Summary(self)
         self.Summary = summary_obj
 
     def _write_grid_files(self, file_tag, is_multi_gpu=True):
@@ -818,15 +872,17 @@ class InputHipims:
                 vector_value = vector_value_list[obj_section.section_id]
                 cell_id = np.arange(vector_value.shape[0])
                 cells_vect = np.c_[cell_id, vector_value]
-                file_name = obj_section.data_folders['field']+file_tag+'.dat'
+                file_name = os.path.join(obj_section._data_folders['field'],
+                                         file_tag+'.dat')
                 if file_tag == 'precipitation_mask':
                     bounds_vect = None
                 else:
                     bounds_vect = \
                         obj_section._get_boundary_id_code_array(file_tag)
-                _write_two_arrays(file_name, cells_vect, bounds_vect)
+                indep_f._write_two_arrays(file_name, cells_vect, bounds_vect)
         else:  # single GPU, use global object
-            file_name = self.data_folders['field']+file_tag+'.dat'
+            file_name = os.path.join(self._data_folders['field'],
+                                     file_tag+'.dat')
             vector_value = self._get_vector_value(file_tag, is_multi_gpu=False)
             cell_id = np.arange(vector_value.shape[0])
             cells_vect = np.c_[cell_id, vector_value]
@@ -834,7 +890,7 @@ class InputHipims:
                 bounds_vect = None
             else:
                 bounds_vect = self._get_boundary_id_code_array(file_tag)
-            _write_two_arrays(file_name, cells_vect, bounds_vect)
+            indep_f._write_two_arrays(file_name, cells_vect, bounds_vect)
         return None
 
     def _make_data_dirs(self):
@@ -842,9 +898,20 @@ class InputHipims:
         """
         if hasattr(self, 'Sections'):
             for obj_section in self.Sections:
-                _create_io_folders(obj_section.case_folder, make_dir=True)
+                indep_f._create_io_folders(obj_section.get_case_folder(),
+                                           make_dir=True)
         else:
-            _create_io_folders(self.case_folder, make_dir=True)
+            indep_f._create_io_folders(self._case_folder, make_dir=True)
+    
+    def _dict2grid(self, mask_dict):
+        """Convert mask_dict to a grid array with the same shape of DEM
+        """
+        num_values = mask_dict['value'].size
+        grid_array = np.zeros(self.DEM.shape).astype(mask_dict['value'].dtype)
+        for i in np.arange(num_values):
+            grid_array[mask_dict['index'][i]] = mask_dict['value'][i]
+        return grid_array
+        
 #------------------------------------------------------------------------------
 #*************** Private methods only for the parent class ********************
 #------------------------------------------------------------------------------
@@ -938,10 +1005,43 @@ class InputHipims:
         if type(file_names) is not list:
             file_names = [file_names]
         for i in np.arange(1, self.num_of_sections):
-            field_dir = self.Sections[i].data_folders['field']
+            field_dir = self.Sections[i]._data_folders['field']
             for file in file_names:
                 shutil.copy2(file, field_dir)
-
+    
+    def _setup_by_files(self, data_path):
+        """Read files to setup hipims input object
+        DEM, landcover, rain_mask, endswith '.gz', '.asc', or '.tif'
+        rain_source.csv
+        """
+        data_path = self.data_path
+        ras_file = indep_f._check_raster_exist(os.path.join(data_path, 'DEM'))
+        if ras_file is not None:
+            self.DEM = Raster(ras_file)
+            print(ras_file+ ' read')
+        ras_file = indep_f._check_raster_exist(os.path.join(data_path,
+                                                            'landcover'))
+        if ras_file is not None:
+            self.Landcover = Landcover(ras_file, dem_ras=self.DEM)
+        if ras_file is not None:
+            obj_landuse = Raster(ras_file)
+            self.landuse_dict = indep_f._mask2dict(obj_landuse,
+                                                   self.DEM.header)
+            print(ras_file+ ' read')
+        
+        mask_file = indep_f._check_raster_exist(os.path.join(data_path,
+                                                         'rain_mask'))
+        if mask_file is not None:
+            source_file = os.path.join(data_path, 'rain_source.csv')
+            if os.path.isfile(source_file):
+                self.Rainfall = Rainfall(mask_file, source_file, 
+                                        dem_ras=self.DEM)
+                print(mask_file+ ' read')
+                print(source_file+ ' read')
+            else:
+                raise IOError('rain_mask is found, but '+source_file+
+                              ' is missing')
+            
 #%%****************************************************************************
 #************************sub-class definition**********************************
 class InputHipimsSub(InputHipims):
@@ -966,216 +1066,6 @@ class InputHipimsSub(InputHipims):
 
 #%%****************************************************************************
 #********************************Static method*********************************
-def _cell_subs_convertor(input_cell_subs, header_global,
-                         header_local, to_global=True):
-    """
-    Convert global cell subs to divided local cell subs or the otherwise
-    and return output_cell_subs, only rows need to be changed
-    input_cell_subs : (tuple) input rows and cols of a grid
-    header_global : head information of the global grid
-    header_local : head information of the local grid
-    to_global : logical values, True (local to global) or
-                                False(global to local)
-    Return:
-        output_cell_subs: (tuple) output rows and cols of a grid
-    """
-    # X and Y coordinates of the centre of the first cell
-    y00_centre_global = header_global['yllcorner']+\
-                         (header_global['nrows']+0.5)*header_global['cellsize']
-    y00_centre_local = header_local['yllcorner']+\
-                        (header_local['nrows']+0.5)*header_local['cellsize']
-    row_gap = (y00_centre_global-y00_centre_local)/header_local['cellsize']
-    row_gap = round(row_gap)
-    rows = input_cell_subs[0]
-    cols = input_cell_subs[1]
-    if to_global:
-        rows = rows+row_gap
-        # remove subs out of range of the global DEM
-        ind = np.logical_and(rows >= 0, rows < header_global['nrows'])
-    else:
-        rows = rows-row_gap
-        # remove subs out of range of the global DEM
-        ind = np.logical_and(rows >= 0, rows < header_local['nrows'])
-    rows = rows.astype(cols.dtype)
-    rows = rows[ind]
-    cols = cols[ind]
-    output_cell_subs = (rows, cols)
-    return output_cell_subs
-
-def _write_two_arrays(file_name, id_values, bound_id_code=None):
-    """Write two arrays: cell_id-value pairs and bound_id-bound_code pairs
-    Inputs:
-        file_name :  the full file name including path
-        id_values: valid cell ID - value pair
-        bound_id_code: boundary cell ID - codes pair. If bound_id_code is not
-            given, then the second part of the file won't be written (only
-            the case for precipitatin_mask.dat)
-    """
-    if not file_name.endswith('.dat'):
-        file_name = file_name+'.dat'
-    if id_values.shape[1] == 3:
-        fmt = ['%d %g %g']
-    elif id_values.shape[1] == 2:
-        fmt = ['%d %g']
-    else:
-        raise ValueError('Please check the shape of the 1st array: id_values')
-    fmt = '\n'.join(fmt*id_values.shape[0])
-    id_values_str = fmt % tuple(id_values.ravel())
-    if bound_id_code is not None:
-        fmt = ['%-12d %2d %2d %2d']
-        fmt = '\n'.join(fmt*bound_id_code.shape[0])
-        bound_id_code_str = fmt % tuple(bound_id_code.ravel())
-    with open(file_name, 'w') as file2write:
-        file2write.write("$Element Number\n")
-        file2write.write("%d\n" % id_values.shape[0])
-        file2write.write("$Element_id  Value\n")
-        file2write.write(id_values_str)
-        if bound_id_code is not None:
-            file2write.write("\n$Boundary Numbers\n")
-            file2write.write("%d\n" % bound_id_code.shape[0])
-            file2write.write("$Element_id  Value\n")
-            file2write.write(bound_id_code_str)
-
-def _get_cell_id_array(dem_array):
-    """ to generate two arrays with the same size of dem_array:
-    1. valid_id: to store valid cell id values (sequence number )
-        starting from 0, from bottom, left to right, top
-    2. outline_id: to store valid cell id on the boundary cells
-    valid_id, outline_id = __get_cell_id_array(dem_array)
-    """
-    # convert DEM to a two-value array: NaNs and Ones
-    # and flip up and down
-    dem_array_flip = np.flipud(dem_array*0+1)
-    # Return the cumulative sum of array elements over a given axis
-    # treating NaNs) as zero.
-    nancumsum_vector = np.nancumsum(dem_array_flip)
-    # sequence number of valid cells: 0 to number of cells-1
-    valid_id = nancumsum_vector-1
-    # reshape as an array with the same size of DEM
-    valid_id = np.reshape(valid_id, np.shape(dem_array_flip))
-    # set NaN cells as NaNs
-    valid_id[np.isnan(dem_array_flip)] = np.nan
-    valid_id = np.flipud(valid_id)
-    # find the outline boundary cells
-    array_for_outline = dem_array*0
-    array_for_outline[np.isnan(dem_array)] = -1
-    h_hv = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]])
-    # Convolve two array_for_outline arrays
-    ind_array = scipy.signal.convolve2d(array_for_outline, h_hv, mode='same')
-    ind_array[ind_array < 0] = np.nan
-    ind_array[0, :] = np.nan
-    ind_array[-1, :] = np.nan
-    ind_array[:, 0] = np.nan
-    ind_array[:, -1] = np.nan
-    # extract the outline cells by a combination
-    ind_array = np.isnan(ind_array) & ~np.isnan(dem_array)
-    # boundary cells with valid cell id are extracted
-    outline_id = dem_array*0-2 # default inner cells value:-2
-    outline_id[ind_array] = 0 # outline cells:0
-    return valid_id, outline_id
-
-def _get_split_rows(input_array, num_of_sections):
-    """ Split array by the number of valid cells (not NaNs) on each rows
-    input_array : an array with some NaNs
-    num_of_sections : (int) number of sections that the array to be splited
-    return split_rows : a list of row subscripts to split the array
-    Split from bottom to top
-    """
-    valid_cells = ~np.isnan(input_array)
-    # valid_cells_count by rows
-    valid_cells_count = np.sum(valid_cells, axis=1)
-    valid_cells_count = np.cumsum(valid_cells_count)
-    split_rows = []  # subscripts of the split row [0, 1,...]
-    total_valid_cells = valid_cells_count[-1]
-    for i in np.arange(num_of_sections-1): 
-        num_section_cells = total_valid_cells*(i+1)/num_of_sections
-        split_row = np.sum(valid_cells_count<=num_section_cells)-1
-        split_rows.append(split_row)
-    # sort from bottom to top
-    split_rows.sort(reverse=True)
-    return split_rows
-
-def _split_array_by_rows(input_array, header, split_rows, overlayed_rows=2):
-    """ Clip an array into small ones according to the seperating rows
-    input_array : the DEM array
-    header : the DEM header
-    split_rows : a list of row subscripts to split the array
-    Split from bottom to top
-    Return array_local, header_local: lists to store local DEM array and header
-    """
-    header_global = header
-    end_row = header_global['nrows']-1
-    overlayed_rows = 1
-    array_local = []
-    header_local = []
-    section_sequence = np.arange(len(split_rows)+1)
-    for i in section_sequence:  # from bottom to top
-        section_id = i
-        if section_id == section_sequence.max(): # the top section
-            start_row = 0
-        else:
-            start_row = split_rows[i]-overlayed_rows
-        if section_id == 0: # the bottom section
-            end_row = header_global['nrows']-1
-        else:
-            end_row = split_rows[i-1]+overlayed_rows-1
-        sub_array = input_array[start_row:end_row+1, :]
-        array_local.append(sub_array)
-        sub_header = header_global.copy()
-        sub_header['nrows'] = sub_array.shape[0]
-        sub_yllcorner = (header_global['yllcorner']+
-                         (header_global['nrows']-1-end_row)*
-                         header_global['cellsize'])
-        sub_header['yllcorner'] = sub_yllcorner
-        header_local.append(sub_header)
-    return array_local, header_local
-
-def _create_io_folders(case_folder, make_dir=False):
-    """ create Input-Output path for a Hipims case
-        (compatible for single/multi-GPU)
-    Return:
-      dir_input, dir_output, dir_mesh, dir_field
-    """
-    folder_name = case_folder
-    if not folder_name.endswith('/'):
-        folder_name = folder_name+'/'
-    dir_input = folder_name+'input/'
-    dir_output = folder_name+'output/'
-    if not os.path.exists(dir_output) and make_dir:
-        os.makedirs(dir_output)
-    if not os.path.exists(dir_input) and make_dir:
-        os.makedirs(dir_input)
-    dir_mesh = dir_input+'mesh/'
-    if not os.path.exists(dir_mesh) and make_dir:
-        os.makedirs(dir_mesh)
-    dir_field = dir_input+'field/'
-    if not os.path.exists(dir_field) and make_dir:
-        os.makedirs(dir_field)
-    data_folders = {'input':dir_input, 'output':dir_output,
-                    'mesh':dir_mesh, 'field':dir_field}
-    return data_folders
-
-def _generate_mask_for_DEM(mask_origin, dem_data):
-    """Interpolate orginal mask file to the dem data
-    the interpolating method is nearest
-    """
-    if type(mask_origin) is str:
-        mask_obj = Raster(mask_origin)
-    elif type(mask_origin) is Raster:
-        mask_obj = mask_origin
-    else:
-        raise ValueError('mask_origin must be either a filename ',
-                         'string or a Raster object')
-    if type(dem_data) is str:
-        dem_obj = Raster(dem_data)
-    elif type(dem_data) is Raster:
-        dem_obj = dem_data
-    else:
-        raise ValueError('mask_origin must be either a filename ',
-                         'string or a Raster object')
-    mask_on_dem = dem_obj.grid_interpolate(mask_obj)
-    mask_on_dem.array = mask_on_dem.array.astype('int32')
-    return mask_on_dem
 
 def copy_input_obj(obj_in):
     """Copy the an object of class InputHipims
@@ -1184,7 +1074,10 @@ def copy_input_obj(obj_in):
     dem_data = Raster(array=obj_in.Raster.array, 
                              header=obj_in.Raster.header)
     num_of_sections = obj_in.num_of_sections
-    case_folder = obj_in.case_folder
+    if hasattr(obj_in, 'case_folder'):
+        case_folder = obj_in.case_folder
+    else:
+        case_folder = obj_in._case_folder
     # initialize a new object
     obj_copy = InputHipims(dem_data=dem_data, num_of_sections=num_of_sections,
                            case_folder=case_folder)
@@ -1203,15 +1096,16 @@ def copy_input_obj(obj_in):
     outline_boundary = obj_in.Boundary.outline_boundary
     obj_copy.set_boundary_condition(boundary_list, outline_boundary)
     # copy summary
-    summary_infor = obj_in.Summary.information_dict
-    infor_keys = list(summary_infor.keys())
-    iloc = 0
-    for i in range(len(infor_keys)):
-        if infor_keys[i] == 'gauges_pos':
-            iloc = i
-    infor_keys = infor_keys[iloc+1:]
-    for key in infor_keys:
-        obj_copy.Summary.add_items(key, summary_infor[key])
+#    if hasattr(obj_in.Summary)
+#    summary_infor = obj_in.Summary.information_dict
+#    infor_keys = list(summary_infor.keys())
+#    iloc = 0
+#    for i in range(len(infor_keys)):
+#        if infor_keys[i] == 'gauges_pos':
+#            iloc = i
+#    infor_keys = infor_keys[iloc+1:]
+#    for key in infor_keys:
+#        obj_copy.Summary.add_items(key, summary_infor[key])
     return obj_copy
 
 def main():

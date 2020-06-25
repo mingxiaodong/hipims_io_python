@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import hipims_io.spatial_analysis as sp
 from .Raster import Raster
-from .indep_functions import save_object
+from .indep_functions import save_object, _create_io_folders
 class OutputHipims:
     """To read and analyze otuput files from a HiPIMS flood model
     Properties (public):
@@ -62,7 +62,7 @@ class OutputHipims:
         elif hasattr(input_obj, 'case_folder'):
             # get information from the input object
             # case_folder, num_of_sections, header
-            self.case_folder = input_obj.case_folder
+            self.case_folder = input_obj.get_case_folder()
             self.num_of_sections = input_obj.num_of_sections
             self.header = input_obj.header
             self.dem_array = input_obj.DEM.array
@@ -228,14 +228,17 @@ class OutputHipims:
         case_folder = self.case_folder
         num_of_sections = self.num_of_sections
         if num_of_sections == 1: # single gpu
-            output_folder = case_folder+'/output/'
-            input_folder = case_folder+'/input/'
+            data_folders = _create_io_folders(case_folder)
+            output_folder = data_folders['output']
+            input_folder = data_folders['input']
         else: #multi-gpu model
             output_folder = []
             input_folder = []
             for i in range(num_of_sections):
-                output_folder.append(case_folder+'/'+str(i)+'/output/')  
-                input_folder.append(case_folder+'/'+str(i)+'/input/')
+                section_case_folder = os.path.join(case_folder, str(i))
+                data_folders = _create_io_folders(section_case_folder)
+                output_folder.append(data_folders['output'])  
+                input_folder.append(data_folders['input'])
         self.output_folder = output_folder
         self.input_folder = input_folder
     

@@ -309,18 +309,17 @@ class Raster(object):
         resampled to the target grid.
         obj_origin, obj_target: Raster objects
         """
-        obj_origin = copy.deepcopy(self)
-        if obj_origin.header['cellsize'] != new_header['cellsize']:
-            cellsize_new = new_header['cellsize']
-            obj_origin = obj_origin.grid_resample_nearest(cellsize_new)
-        grid_x, grid_y = obj_origin.to_points()
-        rows, cols = sp.map2sub(grid_x, grid_y, new_header)
-        ind_r = np.logical_and(rows >= 0, rows <= new_header['nrows']-1)
-        ind_c = np.logical_and(cols >= 0, cols <= new_header['ncols']-1)
-        ind = np.logical_and(ind_r, ind_c)
-        array = obj_origin.array[ind]
-        array = np.reshape(array, (new_header['nrows'], new_header['ncols']))
-        obj_output = Raster(array=array, header=new_header)
+        rows = np.arange(0, new_header['nrows'])
+        cols = np.arange(0, new_header['ncols'])
+        X, Y = sp.sub2map(rows, cols, new_header)
+        grid_x, grid_y = np.meshgrid(X, Y)
+        rows, cols = sp.map2sub(grid_x, grid_y, self.header)
+        rows[rows > self.header['nrows']-1] = self.header['nrows']-1
+        rows[rows < 0] = 0
+        cols[cols > self.header['ncols']-1] = self.header['ncols']-1
+        cols[cols < 0] = 0
+        new_array = self.array[rows, cols]
+        obj_output = Raster(array=new_array, header=new_header)
         return obj_output
 
     def to_points(self):
@@ -359,13 +358,14 @@ class Raster(object):
         return None
     
     def to_osgeo_raster(self, filename=None, fileformat = 'GTiff',
-                        destEPSG=27700):        
+                        srcEPSG=27700, destEPSG=None):        
         """
         convert this object to an osgeo raster object, write a tif file if 
             necessary
         filename: the output file name
         fileformat: GTiff or AAIGrid
-        destEPSG: the EPSG projection code default: British National Grid
+        destEPSG: the EPSG projection code default: 27700 British National Grid
+                'EPSG:4326'
         return:
             an osgeo raster dataset
             or a tif filename if it is written
@@ -385,8 +385,8 @@ class Raster(object):
         PIXEL_SIZE = self.header['cellsize']  # size of the pixel...        
         x_min = self.extent[0] # left  
         y_max = self.extent[3] # top
-        dest_crs = osr.SpatialReference()
-        dest_crs.ImportFromEPSG(destEPSG)
+        src_crs = osr.SpatialReference()
+        src_crs.ImportFromEPSG(srcEPSG)
         # create dataset with driver
         driver = gdal.GetDriverByName(driver_name)
         ncols = int(self.header['ncols'])
@@ -405,11 +405,15 @@ class Raster(object):
             0,           # 4
             -PIXEL_SIZE))  
     
-        dataset.SetProjection(dest_crs.ExportToWkt())
+        dataset.SetProjection(src_crs.ExportToWkt())
         array = self.array
         dataset.GetRasterBand(1).WriteArray(array)
         dataset.GetRasterBand(1).SetNoDataValue(self.header['NODATA_value'])
         if filename is not None:
+            if destEPSG is not None:
+#                dest_crs = osr.SpatialReference()
+#                dest_crs.ImportFromEPSG(destEPSG)
+                gdal.Warp(dst_filename, dataset, dstSRS=destEPSG)
             dataset.FlushCache()  # Write to disk.
             dataset = None
             return dst_filename

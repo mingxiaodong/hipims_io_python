@@ -151,8 +151,8 @@ class Boundary(object):
             bound_obj._fetch_boundary_cells(
                 valid_subs_local, outline_subs_local, header_local)
             obj_section.Boundary = bound_obj
-            summary_str = bound_obj.get_summary()
-            obj_section.Summary.add_items('Boundary conditions', summary_str)
+#            summary_str = bound_obj.get_summary()
+#            obj_section.Summary.add_items('Boundary conditions', summary_str)
 
 #%%
 # private function called by Class Boundary

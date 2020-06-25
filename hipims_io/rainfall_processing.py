@@ -59,10 +59,12 @@ def get_time_series(rain_source, rain_mask=None,
     else:
         raise ValueError('Cannot recognise the calculation method')
     value_y =  value_y*3600*1000
-    plot_data = np.c_[time_x,value_y]
+    plot_data = np.c_[time_x, value_y]
     return plot_data
 
-def get_spatial_map(rain_source, rain_mask_obj, cellsize=None, method='sum'):
+def get_spatial_map(rain_source, rain_mask_obj, figname=None,
+                    method='sum', cellsize=None,
+                    shp_file=None, dpi=200, title=None, **kwargs):
     """Get spatial rainfall map
     rain_mask_obj: asc file name or Raster object for rain mask
     cellsize: resample the rain_mask to a new grid (with larger cellsize)
@@ -72,8 +74,10 @@ def get_spatial_map(rain_source, rain_mask_obj, cellsize=None, method='sum'):
     times = rain_source[:,0]
     rain_values = rain_source[:,1:]
     rain_total = np.trapz(rain_values, x=times, axis=0)*1000 #mm
+    cax_str = 'mm/h'
     if method == 'sum':
         cell_rain = rain_total #mm
+        cax_str = 'mm'
     elif method == 'mean':
         cell_rain = rain_total/(times.max()-times.min())*3600 #mm/h
     elif method == 'max':
@@ -91,12 +95,31 @@ def get_spatial_map(rain_source, rain_mask_obj, cellsize=None, method='sum'):
     if cellsize is not None:
         if cellsize > rain_mask_obj.header['cellsize']:
             mask_obj = rain_mask_obj.grid_resample_nearest(cellsize)  
-    rain_mask = mask_obj.array
-    rain_mask[np.isnan(rain_mask)] = 0
+    ind_nan = np.isnan(mask_obj.array)
+    rain_mask = mask_obj.array+0
+    rain_mask[ind_nan] = 0
     mask_ind = rain_mask.flatten(order='F').astype('int64')
     rain_vect = cell_rain[mask_ind]
     rain_array = np.reshape(rain_vect, mask_obj.array.shape, order='F')
+    rain_array[ind_nan] = np.nan
     rain_map_obj = Raster(array=rain_array, header=mask_obj.header)
+    fig, ax = rain_map_obj.mapshow(cax_str=cax_str, **kwargs)
+    xbound = ax.get_xbound()
+    ybound = ax.get_ybound()
+    # draw shape file on the rainfall map
+    if shp_file is not None:
+        sf = shapefile.Reader(shp_file)
+        for shape in sf.shapeRecords():
+            x = [i[0] for i in shape.shape.points[:]]
+            y = [i[1] for i in shape.shape.points[:]]
+            ax.plot(x, y, color='r', linewidth=1)
+    ax.set_xbound(xbound)
+    ax.set_ybound(ybound)
+    if title is not None:
+        ax.set_title(title)
+    if figname is not None:
+        fig.savefig(figname, dpi=dpi, bbox_inches = 'tight', pad_inches = 0.02)
+        plt.close(fig)
     return rain_map_obj
 
 def plot_time_series(plot_data=None, rain_source=None, rain_mask=None,
@@ -169,71 +192,16 @@ def create_pictures(rain_source, mask_file, cellsize=1000,
         fig_name = 'temp'+str(i)+'.png'
         fig_names.append(fig_name)
         one_source = rain_source[i, :]
+        one_source = one_source.reshape((1, one_source.size))
         if start_date is None:
             title_str = '{:.0f}'.format(time_series[i])+'s'
         else:
             title_str = start_date+timedelta(seconds=time_series[i])
             title_str = title_str.strftime("%m/%d/%Y %H:%M:%S")
-        plot_rain_map(one_source, mask_file, cellsize=cellsize,
-                      shp_file=shp_file, title_str=title_str,
-                      output_file=fig_name, dpi=dpi, **kwargs)
+        get_spatial_map(one_source, mask_file, cellsize=cellsize,
+                        shp_file=shp_file, title=title_str,
+                        figname=fig_name, dpi=dpi, **kwargs)
     return fig_names
-
-def plot_rain_map(rain_source, mask_file, output_file=None, cellsize=1000,
-                  method='mean', shp_file=None, dpi=200, title_str=None,
-                  **kwargs):
-    """Plot rainfall map showing rain rate in each grid cell
-    """
-    
-    if type(mask_file) is str:
-        mask_file = Raster(mask_file)
-    mask_obj = mask_file.resample(cellsize, 'near')
-    cax_str = 'mm/h'
-    if np.ndim(rain_source) == 1:
-        rain_values = rain_source[1:]*3600*1000
-    else:
-        time_series = rain_source[:, 0]/3600 #h
-        rain_values = rain_source[:, 1:]*3600*1000 # m/s to mm/h
-        if method == 'mean':
-            time_delta = (time_series[-1]-time_series[0]) # s
-            rain_values = np.trapz(rain_values, x=time_series,
-                                   axis=0)/time_delta
-        elif method == 'sum':
-            rain_values = np.trapz(rain_values, x=time_series, axis=0)
-            cax_str = 'mm'
-        elif method == 'max': # mm/h
-            rain_values = rain_values.max(axis=0)
-        elif method == 'min': # mm/h
-            rain_values = rain_values.min(axis=0)
-        elif method == 'median': # mm/h
-            rain_values = np.median(rain_values, axis=0)
-        else:
-            raise ValueError('method must be one from mean, sum, max, min, '
-                             'median')
-    rain_array = mask_obj.array*0.0
-    mask_values = np.unique(mask_obj.array).astype('int')
-    for value in mask_values:
-        rain_array[mask_obj.array == value] = rain_values[value]
-    rain_array[rain_array == 0] = np.nan
-    rain_obj = Raster(array=rain_array, header=mask_obj.header)
-    fig, ax = rain_obj.mapshow(cax_str=cax_str, **kwargs)
-    xbound = ax.get_xbound()
-    ybound = ax.get_ybound()
-    # draw shape file on the rainfall map
-    if shp_file is not None:
-        sf = shapefile.Reader(shp_file)
-        for shape in sf.shapeRecords():
-            x = [i[0] for i in shape.shape.points[:]]
-            y = [i[1] for i in shape.shape.points[:]]
-            ax.plot(x, y, color='r', linewidth=1)
-    ax.set_xbound(xbound)
-    ax.set_ybound(ybound)
-    if title_str is not None:
-        ax.set_title(title_str)
-    if output_file is not None:
-        fig.savefig(output_file, dpi=dpi)
-        plt.close(fig)
-    return fig, ax
     
 def _check_rainfall_rate_values(rain_source, times_in_1st_col=True):
     """ Check the rainfall rate values in rain source array
