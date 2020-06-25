@@ -13,6 +13,17 @@ A quick demonstration to setup a HiPIMS input object with a sample DEM:
 import hipims_io as hp
 obj_in = hp.demo_input() # create an input object and show domain map
 ```
+A quick demonstration to setup a HiPIMS input object with a data path contaning the following files:
+*DEM.gz/.asc/.tif [essential file, in projected crs]
+*rain_mask.gz/.asc/.tif [optional file for setting rainfall, having the same crs with DEM]
+*rain_source.csv [optional file for setting rainfall rate in timeseries]
+*landcover.gz/.asc/.tif [optional file for setting landcover-based parameters, having the same crs with DEM]
+
+```
+import hipims_io as hp
+obj_in = hp.demo_input() # create an input object and show domain map
+```
+
 A step-by-step tutorial to setup a HiPIMS input object with sample data:
 
 

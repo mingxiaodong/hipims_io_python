@@ -35,7 +35,7 @@ def demo_input(num_of_sections=1, set_example_inputs=True,
     figname: (string) if given, a domain map will saved
     """
     dem_file = pkg_resources.resource_filename(__name__,
-                                             'sample/Example_DEM.gz')
+                                             'sample/DEM.gz')
     obj_in = InputHipims(dem_data=dem_file, num_of_sections=num_of_sections)
     if set_example_inputs:
         __set_defaul_input(obj_in)
@@ -75,7 +75,7 @@ def get_sample_data():
             gauges_pos data
     """
     dem_file = pkg_resources.resource_filename(__name__,
-                                             'sample/Example_DEM.gz')
+                                             'sample/DEM.gz')
     obj_ras = Raster(dem_file)
     demo_data_file = pkg_resources.resource_filename(__name__,
                                              'sample/Example_data.npy')

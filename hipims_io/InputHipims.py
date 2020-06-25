@@ -55,7 +55,7 @@ class InputHipims:
         times:  (list/numpy array) of four values reprenting model run time in
                 seconds: start, end, output interval, backup interval
         device_no: (int) the gpu device id(s) to run model
-        landcover_args: dict, argument to set grid parameters with Landcover
+        param_per_landcover: dict, argument to set grid parameters using Landcover
             object. Keys are grid parameter names. Value is a dict with three
             keys: param_value, land_value, default_value. Refer to Landcover
             for more details.
@@ -143,7 +143,7 @@ class InputHipims:
         """
         dem_data: (Raster object) or (str) provides file name of the DEM data
         data_folder: a path contain at least a DEM file named as 'DEM' with a
-            suffix .gz|.asc|.tif. 'landuse' and 'rain_mask' can also be read if
+            suffix .gz|.asc|.tif. 'landcover' and 'rain_mask' can also be read if
             these files were given with one of the three suffix
         """
         self.attributes = InputHipims.__attributes_default.copy()
@@ -221,12 +221,12 @@ class InputHipims:
         if hasattr(self, 'Summary'):
             self.Summary.set_boundary_attr(self.Boundary)
 
-    def set_parameter(self, parameter_name, parameter_value):
-        """ [Obsolete] Set grid-based parameters 
-        parameter_name: (str) from gridded_parameter_keys
-        parameter_value: (scalar)|(numpy array) with the same size of DEM.
+    def set_initial_condition(self, parameter_name, parameter_value):
+        """ Set initial condition for h0, hU0x, hU0y
+        parameter_name: (str) h0, hU0x, hU0y
+        parameter_value: scalar or numpy array with the same size of DEM.
         """
-        if parameter_name not in InputHipims.__attributes_default.keys():
+        if parameter_name not in ['h0', 'hU0x', 'hU0y']:
             raise ValueError('Parameter is not recognized: '+parameter_name)
         if type(parameter_value) is np.ndarray:
             if parameter_value.shape != self.shape:
@@ -237,7 +237,7 @@ class InputHipims:
             raise ValueError('The parameter value must be either '
                              'a scalar or an numpy array')
         self.attributes[parameter_name] = parameter_value
-        self.Summary.set_gridded_params(**{parameter_name:parameter_value})
+        self.Summary.set_initial_attr(**{parameter_name:parameter_value})
     
     def set_grid_parameter(self, **kwargs):
         """ Set grid parameter with Landcover object as name=value
@@ -248,9 +248,9 @@ class InputHipims:
                 3. dict, contain param_value, land_value, default_value=0
         Return: save a parameter dictionary
         """
-        if not hasattr(self, 'landcover_args'):
+        if not hasattr(self, 'param_per_landcover'):
             # save arguments to call Landcover.to_grid_parameter()
-            self.landcover_args = {}
+            self.param_per_landcover = {}
         for keyword, value in kwargs.items():
             if keyword not in self.gridded_parameter_keys:
                 raise ValueError('Parameter is not recognized: '+keyword)
@@ -263,12 +263,12 @@ class InputHipims:
             elif np.isscalar(value):
                 self.attributes[keyword] = value
             elif type(value) is dict:
-                self.landcover_args[keyword] = value
+                self.param_per_landcover[keyword] = value
                 value_array = self.Landcover.to_grid_parameter(**value)
                 value = value_array
             else:
                 raise ValueError(keyword+' must be a scalar, array or dict')
-            self.Summary.set_gridded_params(**{keyword:value})
+            self.Summary.set_params_attr(**{keyword:value})
 
     def set_rainfall(self, rain_mask=None, rain_source=None):
         """ Set rainfall mask and rainfall source
@@ -340,7 +340,6 @@ class InputHipims:
                 obj.set_case_folder(sub_case_folder)                        
         if hasattr(self, 'Summary'):
             self.Summary.set_model_attr(case_folder=self._case_folder)
-#            self.Summary.set_param('Case folder', self._case_folder)
 
     def set_runtime(self, runtime=None):
         """set runtime of the model
@@ -367,6 +366,11 @@ class InputHipims:
             device_no = np.arange(self.num_of_sections)
         device_no = np.array(device_no)
         self.device_no = device_no
+    
+    def set_landcover(self, landcover_data):
+        """ Set Landcover object with a Raster object or file
+        """
+        self.Landcover = Landcover(landcover_data, self.DEM)
 
     def add_user_defined_parameter(self, param_name, param_value):
         """ Add a grid-based user-defined parameter to the model
@@ -377,13 +381,11 @@ class InputHipims:
             InputHipims.__grid_files.append(param_name)
         self.attributes[param_name] = param_value
         print(param_name+ 'is added to the InputHipims object')
-#        self.Summary.add_param_infor(param_name, param_value)
     
     def set_num_of_sections(self, num_of_sections):
         """ set the number of divided sections to run a case
         can transfer single-gpu to multi-gpu and the opposite way
         """
-#        obj_new = copy.deepcopy(self)
         self.num_of_sections = num_of_sections
         self.set_device_no()
         if num_of_sections==1: # to single GPU
@@ -397,10 +399,8 @@ class InputHipims:
             self.Boundary._divide_domain(self)
         self.set_case_folder(self._case_folder)
         self.birthday = datetime.now()
-#        self.Summary.set_param('Number of Sections', str(num_of_sections))
         self.Summary.set_model_attr(num_GPU=self.num_of_sections)
 #        time_str = self.birthday.strftime('%Y-%m-%d %H:%M:%S')
-#        self.Summary.set_param('Birthday', time_str)
 
     def decomposite_domain(self, num_of_sections):
         """ divide a single-gpu case into a multi-gpu case
@@ -590,7 +590,7 @@ class InputHipims:
     def save_object(self, file_name):
         """ Save object as a pickle file
         """
-        indep_f.save_object(self, file_name, compression=True)
+        indep_f.save_as_dict(self, file_name)
 
 #%%****************************************************************************
 #******************************* Visualization ********************************
@@ -598,7 +598,7 @@ class InputHipims:
                     **kwargs):
         """Show domain map of the object
         """
-        obj_dem = copy.deepcopy(self.DEM)
+        obj_dem = copy.copy(self.DEM)
         if hasattr(self, 'Sections'):
             for obj_sub in self.Sections:
                 overlayed_subs = obj_sub.overlayed_cell_subs_global
@@ -783,8 +783,8 @@ class InputHipims:
             else:
                 grid_values = grid_values+self.attributes[attribute_name]
         else:
-            if hasattr(self, 'landcover_args'):
-                arg_dicts = self.landcover_args
+            if hasattr(self, 'param_per_landcover'):
+                arg_dicts = self.param_per_landcover
                 if attribute_name in arg_dicts.keys():
                     arg_dict = arg_dicts[attribute_name]
                     grid_values = self.Landcover.to_grid_parameter(**arg_dict)
@@ -1020,28 +1020,20 @@ class InputHipims:
             self.DEM = Raster(ras_file)
             print(ras_file+ ' read')
         ras_file = indep_f._check_raster_exist(os.path.join(data_path,
-                                                            'landcover'))
+                                                            'landcover'))        
         if ras_file is not None:
             self.Landcover = Landcover(ras_file, dem_ras=self.DEM)
-        if ras_file is not None:
-            obj_landuse = Raster(ras_file)
-            self.landuse_dict = indep_f._mask2dict(obj_landuse,
-                                                   self.DEM.header)
             print(ras_file+ ' read')
         
         mask_file = indep_f._check_raster_exist(os.path.join(data_path,
                                                          'rain_mask'))
-        if mask_file is not None:
-            source_file = os.path.join(data_path, 'rain_source.csv')
-            if os.path.isfile(source_file):
-                self.Rainfall = Rainfall(mask_file, source_file, 
-                                        dem_ras=self.DEM)
-                print(mask_file+ ' read')
-                print(source_file+ ' read')
-            else:
-                raise IOError('rain_mask is found, but '+source_file+
-                              ' is missing')
-            
+        if mask_file is None:
+            mask_file = 0
+        source_file = os.path.join(data_path, 'rain_source.csv')
+        if not os.path.isfile(source_file):
+            source_file = np.array([[0, 0], [1, 0]])
+        self.Rainfall = Rainfall(mask_file, source_file, dem_ras=self.DEM)
+
 #%%****************************************************************************
 #************************sub-class definition**********************************
 class InputHipimsSub(InputHipims):
@@ -1066,47 +1058,6 @@ class InputHipimsSub(InputHipims):
 
 #%%****************************************************************************
 #********************************Static method*********************************
-
-def copy_input_obj(obj_in):
-    """Copy the an object of class InputHipims
-    """
-    
-    dem_data = Raster(array=obj_in.Raster.array, 
-                             header=obj_in.Raster.header)
-    num_of_sections = obj_in.num_of_sections
-    if hasattr(obj_in, 'case_folder'):
-        case_folder = obj_in.case_folder
-    else:
-        case_folder = obj_in._case_folder
-    # initialize a new object
-    obj_copy = InputHipims(dem_data=dem_data, num_of_sections=num_of_sections,
-                           case_folder=case_folder)
-    attr_dict = copy.deepcopy(obj_in.__dict__)
-    if 'Raster' in attr_dict.keys():
-        del attr_dict['Raster']
-    del attr_dict['Boundary']
-    del attr_dict['Summary']
-    if num_of_sections > 1:
-        del attr_dict['Sections']
-    # set object attributes
-    for key in attr_dict.keys():
-        obj_copy.__dict__[key] = copy.deepcopy(attr_dict[key])
-    # set boundary conditions
-    boundary_list = obj_in.Boundary.boundary_list
-    outline_boundary = obj_in.Boundary.outline_boundary
-    obj_copy.set_boundary_condition(boundary_list, outline_boundary)
-    # copy summary
-#    if hasattr(obj_in.Summary)
-#    summary_infor = obj_in.Summary.information_dict
-#    infor_keys = list(summary_infor.keys())
-#    iloc = 0
-#    for i in range(len(infor_keys)):
-#        if infor_keys[i] == 'gauges_pos':
-#            iloc = i
-#    infor_keys = infor_keys[iloc+1:]
-#    for key in infor_keys:
-#        obj_copy.Summary.add_items(key, summary_infor[key])
-    return obj_copy
 
 def main():
     print('Class to setup input data')

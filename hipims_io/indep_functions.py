@@ -9,6 +9,7 @@ Created on Thu Apr 23 11:45:24 2020
 
 @author: Xiaodong Ming
 """
+import copy
 import gzip
 import pickle
 import os
@@ -41,6 +42,22 @@ def save_object(obj, file_name, compression=True):
         with open(file_name, 'wb') as output_file:
             pickle.dump(obj, output_file, pickle.HIGHEST_PROTOCOL)
     print(file_name+' has been saved')
+
+def save_as_dict(obj, file_name):
+    """Save all attributes of an object to a pickle
+    """
+    obj_dict = copy.copy(obj.__dict__)
+    
+    obj_dict['DEM'] = obj.DEM.__dict__
+    obj_dict['Summary'] = obj.Summary.to_dict()
+    obj_dict['Boundary'] = obj.Boundary.__dict__
+    if hasattr(obj, 'Sections'):
+        obj_dict.pop('Sections')
+    if hasattr(obj, 'Rainfall'):
+        obj_dict['Rainfall'] = obj.Rainfall.__dict__
+    if hasattr(obj, 'Landcover'):
+        obj_dict['Landcover'] = obj.Landcover.__dict__
+    save_object(obj_dict, file_name, compression=True)
 
 def clean_output(case_folder, num_of_sections, file_tag='*'):
     """ delete contents in output folder(s)
@@ -326,7 +343,7 @@ def _check_case_folder(case_folder):
 
 def _check_raster_exist(file_tag):
     """check the existence of raster files .gz, .asc, .tif
-    file_tag: 'DEM', 'rain_mask', 'landuse'
+    file_tag: 'DEM', 'rain_mask', 'landcover'
     """
     if os.path.isfile(file_tag+'.gz'):
         file_name = file_tag+'.gz'

@@ -11,11 +11,28 @@ Created on Fri Jun  5 15:44:18 2020
 """
 #%%
 import os
+import copy
 import numpy as np
 import json
 from . import rainfall_processing as rp
 class Summary:
     """ Summary information of a flood case
+    Attributes:
+        grid_attr
+        model_attr
+        boundary_attr
+        rain_attr
+        params_attr
+        initial_attr
+    Methods:
+        set_grid_attr
+        set_model_attr
+        set_boundary_attr
+        set_rain_attr
+        set_params_attr
+        set_initial_attr
+        display
+        
     """
     # default parameters
     grid_attr = {'area':0, # domain area in meter
@@ -27,9 +44,9 @@ class Summary:
     model_attr = {'case_folder':None, # string
                   'birthday':None,
                   'num_GPU':1,
-                  'run_time':(0, 3600, 600, 3600),
-                  'gauges_pos': [[0, 0], [1, 1]]} 
-                             # start, end, write_interval, backup_interval 
+                  'run_time':(0, 3600, 600, 3600), # start, end, write_interval
+                  'num_gauges': 0} 
+                              
     boundary_attr = {'num_boundary':1,
                      'boundary_details':'outline'}
     rain_attr = {'num_source':0,
@@ -39,10 +56,11 @@ class Summary:
                  'spatial_res':1000, # meter
                  'temporal_res':0 # second
                  }
-    initial_condition = {'h0':0, 'hU0x':0, 'hU0y':0}
-    gridded_params = {'manning':0, 'sewer_sink':0,
+    params_attr = {'manning':0, 'sewer_sink':0,
                    'cumulative_depth':0, 'hydraulic_conductivity':0,
                    'capillary_head':0, 'water_content_diff':0}
+    initial_attr = {'h0':0, 'hU0x':0, 'hU0y':0}
+    
     
     def __init__(self, data_in): 
         if type(data_in) is str: # a jason file
@@ -66,8 +84,8 @@ class Summary:
         self.model_attr = summary_dict['model_attr']
         self.boundary_attr = summary_dict['boundary_attr']
         self.rain_attr = summary_dict['rain_attr']
-        self.initial_condition = summary_dict['initial_condition']
-        self.gridded_params = summary_dict['gridded_params']
+        self.initial_attr = summary_dict['initial_attr']
+        self.params_attr = summary_dict['params_attr']
     
     def __setup_from_object(self, obj_in):
         """Setup from a InputHipims object
@@ -83,7 +101,7 @@ class Summary:
                             birthday=obj_in.birthday.strftime(dt_fmt),
                             num_GPU=obj_in.num_of_sections,
                             run_time=[obj_in.times.tolist(), 's'],
-                            gauges_pos=obj_in.attributes['gauges_pos']
+                            num_gauges=obj_in.attributes['gauges_pos'].shape[0]
                             )
         if hasattr(obj_in, 'Rainfall'):
             self.rain_attr = obj_in.Rainfall.attrs
@@ -98,51 +116,45 @@ class Summary:
             self.set_boundary_attr(obj_in.Boundary)
         
         self.valid_ind = ~np.isnan(dem_array)
-        self.set_gridded_params(
-            manning=obj_in.attributes['manning'],
-            sewer_sink=obj_in.attributes['sewer_sink'],
-            cumulative_depth=obj_in.attributes['cumulative_depth'],
-            hydraulic_conductivity=obj_in.attributes[
-                                        'hydraulic_conductivity'],
-            capillary_head=obj_in.attributes['capillary_head'],
-            water_content_diff=obj_in.attributes['water_content_diff']
-            )
-        
-        self.set_initial_condition(h0=obj_in.attributes['h0'],
-                                   hU0x=obj_in.attributes['hU0x'],
-                                   hU0y=obj_in.attributes['hU0y'])
+        args_dict = copy.copy(self.params_attr)
+        for param_name in args_dict.keys():
+            args_dict[param_name] = obj_in.attributes[param_name]
+        self.set_params_attr(**args_dict)
+        self.set_initial_attr(h0=obj_in.attributes['h0'],
+                              hU0x=obj_in.attributes['hU0x'],
+                              hU0y=obj_in.attributes['hU0y'])
 
     def set_boundary_attr(self, obj_boundary):
         self.boundary_attr['num_boundary'] = obj_boundary.num_of_bound
         smry_dict = obj_boundary.get_summary()
         self.boundary_attr['boundary_details'] = smry_dict['Boundary details']
         
-    def set_gridded_params(self, **kw):
-        names = self.gridded_params.keys()
+    def set_params_attr(self, **kw):
+        names = self.params_attr.keys()
         for key, value in kw.items():
             if key in names:
                 if np.array(value).size==1:
-                    self.gridded_params[key] = value
+                    self.params_attr[key] = value
                 else:
                     values = value[self.valid_ind]
                     values, counts = np.unique(values, return_counts=True)
                     ratios = counts/counts.sum()
                     ratios = ratios.round(4)*100
                     ratios_str = str(ratios.tolist())+'%'
-                    self.gridded_params[key] = [values.tolist(), ratios_str]
+                    self.params_attr[key] = [values.tolist(), ratios_str]
             else:
                 print(key+' is not a grid parameter')
     
-    def set_initial_condition(self, **kw):
-        names = self.initial_condition.keys()
+    def set_initial_attr(self, **kw):
+        names = self.initial_attr.keys()
         for key, value in kw.items():
             if key in names:
                 if np.array(value).size==1:
-                    self.initial_condition[key] = value
+                    self.initial_attr[key] = value
                 else:
                     values = value[self.valid_ind]
                     ratios = np.sum(values != 0)/values.size
-                    self.initial_condition[key] = 'Wet ratio: {:.2f}%'.format(
+                    self.initial_attr[key] = 'Wet ratio: {:.2f}%'.format(
                             ratios*100)
             else:
                 print(key+' is not a grid parameter')
@@ -210,10 +222,10 @@ class Summary:
         summary_dict = {
                 'grid_attr':set_top_dict(self.grid_attr),
                 'model_attr':set_top_dict(self.model_attr),
-                'initial_condition': set_top_dict(self.initial_condition),
+                'initial_attr': set_top_dict(self.initial_attr),
                 'boundary_attr':set_top_dict(self.boundary_attr),
                 'rain_attr':set_top_dict(self.rain_attr),
-                'gridded_params':set_top_dict(self.gridded_params)
+                'params_attr':set_top_dict(self.params_attr)
                 }
         return summary_dict
 
@@ -226,16 +238,16 @@ class Summary:
         print('---------------------- Grid information ----------------------')
         print_dict(self.grid_attr)
 #        print(self.grid_attr)
-        print('---------------------- Model attributes ----------------------')
+        print('---------------------- Model information ---------------------')
         print_dict(self.model_attr)
         print('---------------------- Initial condition ---------------------')
-        print_dict(self.initial_condition)
+        print_dict(self.initial_attr)
         print('---------------------- Boundary condition --------------------')
         print_dict(self.boundary_attr)
         print('---------------------- Rainfall ------------------------------')
         print_dict(self.rain_attr)
         print('---------------------- Parameters ----------------------------')
-        print_dict(self.gridded_params)
+        print_dict(self.params_attr)
         
     def to_json(self, file_name=None):
         """ write to json file
@@ -265,7 +277,7 @@ def load_summary(file_name):
     return summary_dict    
 
 def main():
-    print('Class to setup input data')
+    print('Class to show intput Summary')
 
 if __name__=='__main__':
     main()
