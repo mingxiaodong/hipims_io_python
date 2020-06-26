@@ -14,19 +14,20 @@ import hipims_io as hp
 obj_in = hpio.demo_input() # create an input object and show domain map
 ```
 A quick demonstration to setup a HiPIMS input object with a data path contaning the following files:
-- DEM.gz/.asc/.tif [essential file, in projected crs]
-- rain_mask.gz/.asc/.tif [optional file for setting rainfall, having the same crs with DEM]
-- rain_source.csv [optional file for setting rainfall rate in timeseries]
-- landcover.gz/.asc/.tif [optional file for setting landcover-based parameters, having the same crs with DEM]
+- DEM.gz/.asc/.tif (essential file, in projected crs)
+- rain_mask.gz/.asc/.tif (optional file for setting rainfall, having the same crs with DEM)
+- rain_source.csv (optional file for setting rainfall rate in timeseries]
+- landcover.gz/.asc/.tif (optional file for setting landcover-based parameters, having the same crs with DEM)
 
 ```
 import os
 import hipims_io as hpio
 from hipims_io.demo_functions import get_sample_data
 data_path = get_sample_data(return_path=True) # get the path of sample data
-case_folder = os.path.join(os.getcwd(), 'hipims_case') #create a case folder in the current directory
+case_folder = os.path.join(os.getcwd(), 'hipims_case') # define a case folder in the current directory
 obj_in = hpio.InputHipims(case_folder=case_folder, num_of_sections=1, 
                           data_path=data_path) # create input object
+obj_in.domain_show() # show domain map
 print(obj_in) # show case information
 ```
 
@@ -39,7 +40,7 @@ import hipims_io as hpio
 
 
 obj_dem, model_data = hpio.get_sample_data() # get sample data
-case_folder = os.path.join(os.getcwd(), 'hipims_case') #create a case folder in the current directory
+case_folder = os.path.join(os.getcwd(), 'hipims_case') # define a case folder in the current directory
 # create a single-gpu input object
 obj_in = hpio.InputHipims(dem_data=obj_dem, num_of_sections=1, case_folder=case_folder)
 
