@@ -61,7 +61,6 @@ def load_from_dict(filename):
     obj_dict.pop('Boundary')
     
     summ_dict = obj_dict['Summary']
-    print(summ_dict)
     for key, value in summ_dict.items():
         obj_in.Summary.__dict__[key] = value
     obj_dict.pop('Summary')
