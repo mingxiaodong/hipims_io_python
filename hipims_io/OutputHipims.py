@@ -59,7 +59,7 @@ class OutputHipims:
             self.num_of_sections = num_of_sections
             self._set_IO_folders()
             self._set_grid_header(asc_file=header_file_tag)
-        elif hasattr(input_obj, 'case_folder'):
+        elif hasattr(input_obj, 'DEM'):
             # get information from the input object
             # case_folder, num_of_sections, header
             self.case_folder = input_obj.get_case_folder()
@@ -81,7 +81,7 @@ class OutputHipims:
                 self.output_folder = output_folder
                 self.input_folder = input_folder
         else:
-            raise IOError('The first argument (input_obj) must be '+
+            raise IOError('The first argument (input_obj) must be '
                           'a InputHipims object')
 
     def read_gauges_file(self, file_tag='h', compressed=False):
