@@ -336,7 +336,7 @@ class InputHipims:
         # for multiple GPUs
         if hasattr(self, 'Sections'):
             for obj in self.Sections:
-                sub_case_folder = new_folder+'/'+str(obj.section_id)
+                sub_case_folder = os.path.join(new_folder, str(obj.section_id))
                 obj.set_case_folder(sub_case_folder)                        
         if hasattr(self, 'Summary'):
             self.Summary.set_model_attr(case_folder=self._case_folder)
@@ -533,9 +533,7 @@ class InputHipims:
         """
         num_section = self.num_of_sections
         case_folder = self._case_folder
-        if not case_folder.endswith('/'):
-            case_folder = case_folder+'/'
-        file_name = case_folder+'halo.dat'
+        file_name = os.path.join(case_folder, 'halo.dat')
         with open(file_name, 'w') as file2write:
             file2write.write("No. of Domains\n")
             file2write.write("%d\n" % num_section)
@@ -624,13 +622,13 @@ class InputHipims:
     def plot_rainfall_map(self, figname=None, method='sum', **kw):
         """plot rainfall map within model domain
         """
-        rain_source = self.attributes['precipitation_source']
-        rain_mask = self.attributes['precipitation_mask']
-        rain_mask = self.DEM.array*0+rain_mask
-        rain_mask_obj = Raster(array=rain_mask, header=self.header)
-        rain_map_obj = rp.get_spatial_map(rain_source, rain_mask_obj, figname,
-                                          method, **kw)
-        return rain_map_obj
+        fig, ax = self.Rainfall.plot_rainfall_map(method='sum', **kw)
+        cell_subs = self._outline_cell_subs
+        rows = cell_subs[0]
+        cols = cell_subs[1]
+        X, Y = sub2map(rows, cols, self.DEM.header)
+        ax.plot(X, Y, '.k')
+        return fig, ax 
 
     def plot_rainfall_curve(self, start_date=None, method='mean', **kw):
         """ Plot time series of average rainfall rate inside the model domain
@@ -638,14 +636,8 @@ class InputHipims:
         method: 'mean'|'max','min','mean'method to calculate gridded rainfall 
         over the model domain
         """
-        rain_source = self.attributes['precipitation_source']
-        rain_mask = self.attributes['precipitation_mask']
-        rain_mask = np.array(rain_mask)
-        rain_mask = self.DEM.array*0+rain_mask
-        plot_data = rp.get_time_series(rain_source, rain_mask, start_date, 
-                                    method=method)
-        rp.plot_time_series(plot_data, method=method, **kw)
-        return plot_data
+        fig, ax = self.Rainfall.plot_time_series(method, **kw)
+        return fig, ax
 
 #%%****************************************************************************
 #*************************** Protected methods ********************************
@@ -693,7 +685,7 @@ class InputHipims:
         section_sequence = np.arange(num_of_sections)
         header_global = dem_header
         for i in section_sequence:  # from bottom to top
-            case_folder = self._case_folder+'/'+str(i)
+            case_folder = os.path.join(self._case_folder, str(i))
             # create a sub object of InputHipims
             sub_hipims = InputHipimsSub(array_local[i], header_local[i],
                                         case_folder, num_of_sections)
@@ -934,7 +926,7 @@ class InputHipims:
             for i in np.arange(obj_boundary.num_of_bound):
                 h_source = h_sources[i]
                 if h_source is not None:
-                    file_name = field_dir+'h_BC_'+str(ind_num)+'.dat'
+                    file_name = os.path.join(field_dir, 'h_BC_'+str(ind_num)+'.dat')
                     np.savetxt(file_name, h_source, fmt=fmt_h, delimiter=' ')
                     ind_num = ind_num+1
                     file_names_list.append(file_name)
@@ -946,7 +938,7 @@ class InputHipims:
                 hU_source = hU_sources[i]
                 cell_subs = obj_boundary.cell_subs[i]
                 if hU_source is not None:
-                    file_name = field_dir+'hU_BC_'+str(ind_num)+'.dat'
+                    file_name = os.path.join(field_dir, 'hU_BC_'+str(ind_num)+'.dat')
                     if hU_source.shape[1] == 2:
                         # flow is given rather than speed
                         boundary_slope = np.polyfit(cell_subs[0],
@@ -972,7 +964,7 @@ class InputHipims:
         gauges_pos: 2-col numpy array of X and Y coordinates
         """
         gauges_pos = self.attributes['gauges_pos']
-        file_name = file_folder+'gauges_pos.dat'
+        file_name = os.path.join(file_folder, 'gauges_pos.dat')
         fmt = ['%g %g']
         fmt = '\n'.join(fmt*gauges_pos.shape[0])
         gauges_pos_str = fmt % tuple(gauges_pos.ravel())
@@ -987,7 +979,7 @@ class InputHipims:
         gauges_ind: 1-col numpy array of index values
         """
         gauges_ind = self.attributes['gauges_ind']
-        file_name = file_folder+'gauges_ind.dat'
+        file_name = os.path.join(file_folder, 'gauges_ind.dat')
         fmt = ['%g']
         fmt = '\n'.join(fmt*gauges_ind.shape[0])
         gauges_ind_str = fmt % tuple(gauges_ind.ravel())

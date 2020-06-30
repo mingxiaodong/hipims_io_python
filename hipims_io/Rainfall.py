@@ -9,8 +9,10 @@ Created on Tue Jun 23 21:32:54 2020
 
 @author: ming
 """
-import time
+#import time
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from scipy import stats
 from datetime import datetime
 from datetime import timedelta
@@ -106,7 +108,6 @@ class Rainfall:
         method: 'mean'|'max','min','mean'method to calculate gridded rainfall 
         over the model domain
         """
-        start = time.perf_counter()
         if rain_rate_valid is None:
             rain_rate_valid, _ = self.get_valid_rain_rate() # time-source id
         if method == 'mean':
@@ -122,9 +123,7 @@ class Rainfall:
         else:
             raise ValueError('Cannot recognise the calculation method')
         value_y =  value_y*3600*1000 # mm/h
-        time_series = np.c_[self.time_s, value_y]
-        end = time.perf_counter()
-        print('get_time_series took'+str(end-start))
+        time_series = value_y
         return time_series
 
     def get_spatial_map(self, method='sum'):
@@ -206,6 +205,8 @@ class Rainfall:
         attrs['spatial_res'] = [spatial_res.round(), 'm']
         attrs['temporal_res'] = [temporal_res.round(), 's']
         self.attrs = attrs
+        return attrs
+        
     
     def get_source_array(self):
         """Return a source array, first column is time_s, then continue with
@@ -220,4 +221,39 @@ class Rainfall:
         array_shape = (self.mask_header['nrows'], self.mask_header['ncols'])
         mask_array = indep_f._dict2grid(self.mask_dict, array_shape)
         return mask_array
+
+#%% Visualization
+    def plot_time_series(self, method='mean', dt_interval=24, 
+                         dt_format='%m-%d', title_str=None,
+                         **kwargs):
+        """ Plot time series of average rainfall rate inside the model domain   
+        method: 'mean'|'max','min','mean'method to calculate gridded rainfall 
+        over the model domain
+        """
+        value_y = self.get_time_series(method=method)
+        fig, ax = plt.subplots()        
+        if hasattr(self, 'time_dt'):
+            time_x = self.time_dt
+            ax.xaxis.set_major_locator(
+                    mdates.HourLocator(interval=dt_interval))
+            ax.xaxis.set_major_formatter(mdates.DateFormatter(dt_format))
+        else:
+            time_x = self.time_s
+        ax.plot(time_x, value_y, **kwargs)
+        ax.set_ylabel(method+' rainfall rate (mm/h)')
+        ax.grid(True)
+        if title_str is None:
+            title_str = method+' precipitation in the model domain'
+        ax.set_title(title_str)
+        plt.show()
+        return fig, ax
     
+    def plot_rainfall_map(self, method='sum',cmap='YlGnBu', **kw):
+        """plot rainfall map within model domain
+        method: the way to calculate time series rainfall rate
+        """
+        rain_array, unit_str = self.get_spatial_map(method)
+        grid_obj = Raster(array=rain_array, header=self.mask_header)
+        fig, ax = grid_obj.mapshow(cax_str=unit_str, cmap=cmap, **kw)
+        return fig, ax
+        

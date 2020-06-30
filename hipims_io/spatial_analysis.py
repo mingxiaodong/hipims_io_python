@@ -86,7 +86,8 @@ def arcgridread(file_name, header_rows=6, return_nan=True):
     # read value array
     array = np.loadtxt(file_name, skiprows=header_rows, dtype='float64')
     if return_nan:
-        array[array == header['NODATA_value']] = np.nan
+        if 'NODATA_value' in header:
+            array[array == header['NODATA_value']] = np.nan
     prj_file = file_name[:-4]+'.prj'
     if os.path.isfile(prj_file):
         with open(prj_file, 'r') as file:

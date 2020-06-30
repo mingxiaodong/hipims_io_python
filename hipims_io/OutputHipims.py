@@ -66,8 +66,8 @@ class OutputHipims:
             self.num_of_sections = input_obj.num_of_sections
             self.header = input_obj.header
             self.dem_array = input_obj.DEM.array
-            self.output_folder = input_obj.data_folders['output']
-            self.input_folder = input_obj.data_folders['input']
+            self.output_folder = input_obj._data_folders['output']
+            self.input_folder = input_obj._data_folders['input']
             self.Summary = input_obj.Summary
             if input_obj.num_of_sections>1:
                 header_list = []
@@ -75,8 +75,8 @@ class OutputHipims:
                 input_folder = []
                 for sub_obj in input_obj.Sections:
                     header_list.append(sub_obj.Raster.header)
-                    output_folder.append(sub_obj.data_folders['output'])
-                    input_folder.append(sub_obj.data_folders['input'])
+                    output_folder.append(sub_obj._data_folders['output'])
+                    input_folder.append(sub_obj._data_folders['input'])
                 self.header_list = header_list  
                 self.output_folder = output_folder
                 self.input_folder = input_folder
@@ -95,8 +95,10 @@ class OutputHipims:
         """
         if self.num_of_sections==1:
             output_folder = self.output_folder
-            gauge_output_file = output_folder+file_tag+'_gauges.dat'
-            gauge_pos_file = self.input_folder+'field/gauges_pos.dat'
+            gauge_output_file = os.path.join(output_folder,
+                                             file_tag+'_gauges.dat')
+            gauge_pos_file = os.path.join(self.input_folder,
+                                          'field', 'gauges_pos.dat')
             if compressed:
                 gauge_output_file = gauge_output_file+'.gz'
                 gauge_pos_file = gauge_pos_file+'.gz'
@@ -135,7 +137,7 @@ class OutputHipims:
         if compressed:
             file_tag = file_tag+'.gz'
         if self.num_of_sections==1:
-            file_name = self.output_folder+file_tag
+            file_name = os.path.join(self.output_folder, file_tag)
             grid_array, _, _ = sp.arcgridread(file_name)
         else: # multi-GPU
             grid_array = self._combine_multi_gpu_grid_data(file_tag)
@@ -216,7 +218,7 @@ class OutputHipims:
         array_global = np.zeros(grid_shape)
         for header0, folder0 in zip(header_list, output_folder):
             ind_top, ind_bottom = _header2row_numbers(header0, header_global)
-            file_name = folder0+asc_file_name
+            file_name = os.path.join(folder0, asc_file_name)
             array_local, _, _ = sp.arcgridread(file_name)
             array_global[ind_top:ind_bottom+1,:] = array_local
         return array_global
@@ -256,9 +258,9 @@ class OutputHipims:
                            'header if it is required in your next steps')
         if num_of_sections == 1:
             if asc_file is None:
-                file_name = input_folder+'mesh/DEM.txt'
+                file_name = os.path.join(input_folder, 'mesh', 'DEM.txt')
             else:
-                file_name = output_folder+asc_file
+                file_name = os.path.join(output_folder, asc_file)
             if os.path.exists(file_name):
                 self.header = sp.arc_header_read(file_name)
             else:
@@ -268,9 +270,9 @@ class OutputHipims:
             header_set = True
             for i in np.arange(num_of_sections):
                 if asc_file is None:
-                    file_name = input_folder[i]+'mesh/DEM.txt'
+                    file_name = os.path.join(input_folder[i],'mesh', 'DEM.txt')
                 else:
-                    file_name = output_folder[i]+asc_file
+                    file_name = os.path.join(output_folder[i], asc_file)
                 if os.path.exists(file_name):
                     header = sp.arc_header_read(file_name)
                     headers.append(header)
@@ -299,13 +301,15 @@ def _combine_gauges_data_via_ind(case_folder, num_section, file_tag):
     ind_max = 0
     gauges_pos_all = []
     for i in range(num_section):
-        gauge_ind_file = case_folder+'/'+str(i)+'/input/field/gauges_ind.dat'
+        gauge_ind_file = os.path.join(case_folder, str(i), 'input', 'field',
+                                      'gauges_ind.dat')
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             ind_1 = np.loadtxt(gauge_ind_file, dtype='int')
         if ind_1.size>0:
             ind_max = max(ind_max, ind_1.max())
-            file_name = case_folder+'/'+str(i)+'/input/field/gauges_pos.dat'
+            file_name = os.path.join(case_folder, str(i), 'input', 'field',
+                                     'gauges_pos.dat')
             gauge_xy = np.loadtxt(file_name, dtype='float64', ndmin=2)
             gauges_pos_all.append(gauge_xy)
         ind_list.append(ind_1)
@@ -318,7 +322,8 @@ def _combine_gauges_data_via_ind(case_folder, num_section, file_tag):
     else:
         gauges_value = pd.DataFrame(columns=np.arange(num_gauges))
     for i in range(num_section):
-        file_name = case_folder+'/'+str(i)+'/output/'+file_tag+'_gauges.dat'
+        file_name = os.path.join(case_folder, str(i), 'output',
+                                 file_tag+'_gauges.dat')
         if ind_list[i].size>0:
             t_value = np.loadtxt(file_name, dtype='float64', ndmin=2)
             values = t_value[:,1:]
@@ -344,12 +349,14 @@ def _combine_multi_gpu_gauges_data(header_list, case_folder, file_tag):
     value_array = []
     for i in range(len(header_list)):
         domain_header = header_list[i]
-        gauge_pos_file = case_folder+'/'+str(i)+'/input/field/gauges_pos.dat'
+        gauge_pos_file = os.path.join(case_folder, str(i), 'input', 'field',
+                                      'gauges_pos.dat')
         gauge_xy = np.loadtxt(gauge_pos_file, dtype='float64', ndmin=2)
         if gauge_xy.size>=2:
             gauge_ind = _find_gauges_inside_domain(domain_header, gauge_xy)
             gauges_array.append(gauge_xy[gauge_ind,:])
-            file_name = case_folder+'/'+str(i)+'/output/'+file_tag+'_gauges.dat'
+            file_name = os.path.join(case_folder, str(i), 'output',
+                                     file_tag+'_gauges.dat')
             times, values = _read_one_gauge_file(file_name, gauge_ind)
             value_array.append(values)
     gauges_array = np.concatenate(gauges_array, axis=0)
