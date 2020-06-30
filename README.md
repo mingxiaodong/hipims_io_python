@@ -67,3 +67,7 @@ print(obj_in) # print model summary
 obj_in.write_input_files() 
 
 ```
+
+The domain map will be shown like this:
+
+![Domain map](https://github.com/mingxiaodong/hipims_io_python/blob/master/hipims_io/sample/domain_map.png)
