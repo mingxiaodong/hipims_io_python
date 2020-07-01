@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+
+# Created on Tue Jun 23 21:32:54 2020
+# Author: Xiaodong Ming
+
 """
-Rainall
+Rainfall
+========
+
 To do:
     To read, compute, and show rainfall data
------------------    
-Created on Tue Jun 23 21:32:54 2020
 
-@author: ming
+-----------------
+
 """
-#import time
+import time
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 from scipy import stats
 from datetime import datetime
 from datetime import timedelta
@@ -20,41 +23,32 @@ from .Raster import Raster
 from . import indep_functions as indep_f
 class Rainfall:
     """ a class to set rainfall data for hipims
-    ---------
-    Essential attrs:
-    time_s: 1-col array, time in seconds
-    mask_header: dictionary showing mask georeference
-    mask_dict: dict with two keys:'value' and 'index', providing int array
-               showing rain source number and their index respectively
-    rain_rate: numpy array m/s
-    attrs: summary of the object
-    ----------
-    Optional attrs:
-    subs_in: tuple of row and col number, provide subs of the mask array values
-           inside the model domain. Only available when dem_ras is given
-    start_date: start date and time of time zero in time_s
-    time_dt: datetime format of time_s
-    ----------
-    Methods:
-        set_mask
-        set_source
-        set_start_date
-        get_time_series
-        get_spatial_map
-        get_valid_rain_rate
-        get_attrs
+
+    Attributes:
+
+        time_s: 1-col array, time in seconds
+        mask_header: dictionary showing mask georeference
+        mask_dict: dict with two keys:'value' and 'index', providing int array
+                showing rain source number and their index respectively
+        rain_rate: numpy array m/s
+        attrs: summary of the object
+        subs_in: tuple of row and col number, provide subs of the mask array values
+            inside the model domain. Only available when dem_ras is given
+        start_date: start date and time of time zero in time_s
+        time_dt: datetime format of time_s
+
     """
     def __init__(self, rain_mask, rain_source, source_sep=',', dem_ras=None):
         """initialize rainfall object with source file and mask file
-        rain_mask: str [filename of a Raster endswith .gz/asc/tif]
-                   numpy int array with the same shape with DEM array
-                   a Raster object.
-                   if rain_mask is a scalar or array, dem_ras must be provided.
-        rain_source: numpy array the 1st column is time in seconds, 2nd to
-             the end columns are rainfall rates in m/s.
-                     str [filename of a csv file for rainfall source data]
-        dem_ras:  a Raster object for DEM
-        source_sep: delimeter of the rain source file
+
+        Args:
+            rain_mask: str [filename of a Raster endswith .gz/asc/tif] numpy int array with the same shape with DEM array
+                 a Raster object. If rain_mask is a scalar or array, dem_ras must be provided.           
+            rain_source: numpy array the 1st column is time in seconds, 2nd to the end columns are rainfall rates in m/s. 
+                str [filename of a csv file for rainfall source data]
+            dem_ras: a Raster object for DEM
+            source_sep: delimeter of the rain source file
+            
         """
         self.set_mask(rain_mask, dem_ras)
         self.set_source(rain_source, source_sep)
@@ -62,6 +56,7 @@ class Rainfall:
         
     def set_mask(self, rain_mask, dem_ras=None):
         """Set rainfall mask from a scalar or a grid (object/file)
+
         if rain_mask is a scalar or array, dem_ras must be provided
         """
         if type(rain_mask) is str:
@@ -105,9 +100,12 @@ class Rainfall:
 
     def get_time_series(self, method='mean', rain_rate_valid=None):
         """ Plot time series of average rainfall rate inside the model domain   
-        method: 'mean'|'max','min','mean'method to calculate gridded rainfall 
-        over the model domain
+
+        Args:
+            method: 'mean'|'max','min','mean'method to calculate gridded rainfall 
+                over the model domain
         """
+        start = time.perf_counter()
         if rain_rate_valid is None:
             rain_rate_valid, _ = self.get_valid_rain_rate() # time-source id
         if method == 'mean':
@@ -123,14 +121,19 @@ class Rainfall:
         else:
             raise ValueError('Cannot recognise the calculation method')
         value_y =  value_y*3600*1000 # mm/h
-        time_series = value_y
+        time_series = np.c_[self.time_s, value_y]
+        end = time.perf_counter()
+        print('get_time_series took'+str(end-start))
         return time_series
 
     def get_spatial_map(self, method='sum'):
         """Get spatial rainfall map over time series
-        rain_mask_obj: asc file name or Raster object for rain mask
-        cellsize: resample the rain_mask to a new grid (with larger cellsize)
-        method: sum|mean caculate method for each cell, sum by time or mean by time 
+
+        Args:
+            rain_mask_obj: asc file name or Raster object for rain mask
+            cellsize: resample the rain_mask to a new grid (with larger cellsize)
+            method: sum|mean caculate method for each cell, sum by time or mean by time 
+
         """
         # caculate rain source
         time_s = self.time_s
@@ -158,7 +161,9 @@ class Rainfall:
     
     def get_valid_rain_rate(self, unique=True):
         """Get a rain rate array over valid cells
+
         row is time axis, col is source id axis
+
         """
         array_shape = (self.mask_header['nrows'], self.mask_header['ncols'])
         mask_array = indep_f._dict2grid(self.mask_dict, array_shape)
@@ -205,8 +210,6 @@ class Rainfall:
         attrs['spatial_res'] = [spatial_res.round(), 'm']
         attrs['temporal_res'] = [temporal_res.round(), 's']
         self.attrs = attrs
-        return attrs
-        
     
     def get_source_array(self):
         """Return a source array, first column is time_s, then continue with
@@ -221,39 +224,4 @@ class Rainfall:
         array_shape = (self.mask_header['nrows'], self.mask_header['ncols'])
         mask_array = indep_f._dict2grid(self.mask_dict, array_shape)
         return mask_array
-
-#%% Visualization
-    def plot_time_series(self, method='mean', dt_interval=24, 
-                         dt_format='%m-%d', title_str=None,
-                         **kwargs):
-        """ Plot time series of average rainfall rate inside the model domain   
-        method: 'mean'|'max','min','mean'method to calculate gridded rainfall 
-        over the model domain
-        """
-        value_y = self.get_time_series(method=method)
-        fig, ax = plt.subplots()        
-        if hasattr(self, 'time_dt'):
-            time_x = self.time_dt
-            ax.xaxis.set_major_locator(
-                    mdates.HourLocator(interval=dt_interval))
-            ax.xaxis.set_major_formatter(mdates.DateFormatter(dt_format))
-        else:
-            time_x = self.time_s
-        ax.plot(time_x, value_y, **kwargs)
-        ax.set_ylabel(method+' rainfall rate (mm/h)')
-        ax.grid(True)
-        if title_str is None:
-            title_str = method+' precipitation in the model domain'
-        ax.set_title(title_str)
-        plt.show()
-        return fig, ax
     
-    def plot_rainfall_map(self, method='sum',cmap='YlGnBu', **kw):
-        """plot rainfall map within model domain
-        method: the way to calculate time series rainfall rate
-        """
-        rain_array, unit_str = self.get_spatial_map(method)
-        grid_obj = Raster(array=rain_array, header=self.mask_header)
-        fig, ax = grid_obj.mapshow(cax_str=unit_str, cmap=cmap, **kw)
-        return fig, ax
-        

@@ -1,6 +1,7 @@
 # Compiled python modules.
 *.pyc
-.DS_Store
+/*.DS_Store
+hipims_io/*.DS_Store
 # Setuptools distribution folder.
 /dist/
 /build/

@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#Created on Wed Jun 24 09:20:53 2020
+#Author: Xiaodong Ming
+
 """
 Landcover
+=========
+
 To do:
     To read, compute, and show Landcover types
------------------    
-Created on Wed Jun 24 09:20:53 2020
 
-@author: ming
+-------------
+
 """
 import numpy as np
 from .Raster import Raster
 from . import indep_functions as indep_f
 class Landcover:
     """ A class to set landcover data and use it to set grid parameters
-    Essential attributes:
+
+    Attributes:
         mask_header: dictionary showing mask georeference
-        mask_dict: dict with two keys:'value' and 'index', providing int array
-               showing landcover type and their index respectively
+        mask_dict: dict with two keys:'value' and 'index', providing int array showing landcover type and their index respectively
         
     """
     def __init__(self, ras_data, dem_ras=None):
@@ -45,9 +49,10 @@ class Landcover:
     
     def to_grid_parameter(self, param_value, land_value, default_value=0):
         """ Set grid parameter according to landcover data
-        param_value: scalar or a list of scalar
-        land_ids: index representing landcover, scalar, list of scalar,
-                  or list of list
+
+        Args:
+            param_value: scalar or a list of scalar
+            land_ids: index representing landcover, scalar, list of scalar, or list of list
         """
         mask_array = self.get_mask_array() #landcover value
         param_array = mask_array*0+default_value

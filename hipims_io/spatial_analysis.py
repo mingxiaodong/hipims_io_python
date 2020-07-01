@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# Created on Wed Nov  6 14:33:36 2019
+
 """
--------------------------------------------------------------------------------
+
 spatial_analysis
-functions to analyse data in raster and/or feature datasets
-to replace ArcGridDataProcessing
--------------------------------------------------------------------------------
-@author: Xiaodong Ming
-Created on Wed Nov  6 14:33:36 2019
--------------------------------------------------------------------------------
+================
+
+functions to analyse data in raster and/or feature datasets to replace ArcGridDataProcessing
+
 Assumptions:
-- map unit is meter
-- its cellsize is the same in both x and y direction
-- its reference position is on the lower left corner of the southwest cell
+    * map unit is meter
+    * its cellsize is the same in both x and y direction
+    * its reference position is on the lower left corner of the southwest cell
+
 To do:
-- read and write arc
+    * read and write arc
+
+-----------------
+
 """
 __author__ = "Xiaodong Ming"
 import os
@@ -30,18 +34,26 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 #%%
 def arc_header_read(file_name, header_rows=6):
     """ read the header of a asc file as a dictionary
-    file_name: (string) file name
-    header_rows: (int) number of header rows
+
+    Args: 
+        file_name: (string) file name
+        header_rows: (int) number of header rows
+
     Return:
-        header: a dictionary with keys:
-            ncols: (int) number of columns
-            nrows: (int) number of rows
-            xllcorner: (int/float) x-coordinate of the lower left corner of
-                the lower left cell of the grid
-            yllcorner: (int/float) y-coordinate of the lower left corner of
-                the bottom left cell of the grid
-            cellsize: (int/float) the length of one square cell
-            NODATA_value: (int/float)|-9999 the value representing nodata cell
+        dict: header: a dictionary with keys:
+
+                ncols: (int) number of columns
+
+                nrows: (int) number of rows
+
+                xllcorner: (int/float) x-coordinate of the lower left corner of the lower left cell of the grid
+
+                yllcorner: (int/float) y-coordinate of the lower left corner of the bottom left cell of the grid
+
+                cellsize: (int/float) the length of one square cell
+
+                NODATA_value: (int/float)|-9999 the value representing nodata cell
+
     """
     check_file_existence(file_name)
     # read header
@@ -72,13 +84,19 @@ def arc_header_read(file_name, header_rows=6):
 
 def arcgridread(file_name, header_rows=6, return_nan=True):
     """ Read ArcGrid format raster file
-    file_name: (str) the file name to read data
-    header_rows: (int) the number of head rows of the asc file
+
+    Args:
+        file_name: (str) the file name to read data
+        header_rows: (int) the number of head rows of the asc file
+
     Return:
-        array: (int/float numpy array)
-        header: (dict) to provide reference information of the grid
-        extent: (tuple) outline extent of the grid (left, right, bottom, top)
-    Note: this function can also read compressed gz files
+        numpy array: the data content
+        dict: head of the raster to provide reference information of the grid
+        tuple: outline extent of the grid (left, right, bottom, top)
+
+    Note: 
+        this function can also read compressed gz files
+
     """
     check_file_existence(file_name)
     # read header
@@ -98,12 +116,17 @@ def arcgridread(file_name, header_rows=6, return_nan=True):
 
 def arcgridwrite(file_name, array, header, compression=False):
     """ write gird data into a ascii file
-    file_name: (str) the file name to write grid data. A compressed file will
-        automatically add a suffix '.gz'
-    array: (int/float numpy array)
-    header: (dict) to provide reference information of the grid
-    compression: (logic) to inidcate whether compress the ascii file
+
+    Args:
+        file_name: (str) the file name to write grid data. A compressed file will automatically add a suffix '.gz'
+        array: (int/float numpy array)
+        header: (dict) to provide reference information of the grid
+        compression: (logic) to inidcate whether compress the ascii file
+
     Example:
+
+    .. code:: python
+
         gird = np.zeros((5,10))
         grid[0,:] = -9999
         grid[-1,:] = -9999
@@ -112,6 +135,7 @@ def arcgridwrite(file_name, array, header, compression=False):
         file_name = 'example_file.asc'
         arcgridwrite(file_name, array, header, compression=False)
         arcgridwrite(file_name, array, header, compression=True)
+
     """
     array = array+0
     if not isinstance(header, dict):
@@ -137,9 +161,7 @@ def arcgridwrite(file_name, array, header, compression=False):
     print(file_name + ' created')
 
 def tif_read(file_name):
-    """
-    read tif file and return array, header, projection
-    only read the first band
+    """read tif file and return array, header, projection only read the first band
     """
     from osgeo import gdal
     ds = gdal.Open(file_name)        
@@ -186,8 +208,9 @@ def byte_file_read(file_name):
 #%% Combine raster files
 def combine_raster(asc_files, num_header_rows=6):
     """Combine a list of asc files to a DEM Raster
-    asc_files: a list of asc file names
-    all raster files have the same cellsize
+
+    Args:   
+        asc_files: a list of asc file names. All raster files have the same cellsize.
     """
     # default values for the combined Raster file
     xllcorner_all = []
@@ -243,13 +266,13 @@ def combine_raster(asc_files, num_header_rows=6):
 def map_show(array, header, figname=None, figsize=None, dpi=300,
              vmin=None, vmax=None,
              cax=True, relocate=False, scale_ratio=1):
-    """
-    Display raster data
-    figname: the file name to export map, if figname is empty, then
-        the figure will not be saved
-    figsize: the size of map
-    dpi: The resolution in dots per inch
-    vmin and vmax define the data range that the colormap covers
+    """Display raster data
+
+    Args:
+        figname: the file name to export map, if figname is empty, then the figure will not be saved
+        figsize: the size of map
+        dpi: The resolution in dots per inch
+        vmin and vmax: the data range that the colormap covers
     """
     np.warnings.filterwarnings('ignore')
     array = array+0
@@ -277,9 +300,7 @@ def rank_show(array, header, figname=None, figsize=None, dpi=300,
             breaks=[0.2, 0.3, 0.5, 1, 2], # default for water depth
             show_colorbar=True, show_colorlegend=False,
             relocate=False, scale_ratio=1):
-    """ 
-    Categorize array data as ranks according to the breaks and display a ranked
-        map
+    """Categorize array data as ranks according to the breaks and display a ranked map
     """
     np.warnings.filterwarnings('ignore')
     array = array+0
@@ -340,8 +361,7 @@ def check_file_existence(file_name):
         raise
 
 def header2extent(header):
-    """ convert a header dict to a 4-element tuple (left, right, bottom, top)
-    all four elements shows the coordinates at the edge of a cell, not center
+    """ convert a header dict to a 4-element tuple (left, right, bottom, top) all four elements shows the coordinates at the edge of a cell, not center
     """
     left = header['xllcorner']
     right = header['xllcorner']+header['ncols']*header['cellsize']
@@ -369,9 +389,15 @@ def shape_extent_to_header(shape, extent, nan_value=-9999):
 
 def map2sub(X, Y, header):
     """ convert map coordinates to subscripts of an array
-    array is defined by a geo-reference header
-    X, Y: a scalar or numpy array of coordinate values
-    Return: rows, cols in the array
+
+        array is defined by a geo-reference header
+
+    Args: 
+        X: a scalar or numpy array of coordinate values
+        Y: a scalar or numpy array of coordinate values
+
+    Return: 
+        numpy array: rows and cols in the array
     """
     # X and Y coordinate of the centre of the first cell in the array
     X = np.array(X)
@@ -389,11 +415,15 @@ def map2sub(X, Y, header):
     return rows, cols
 
 def sub2map(rows, cols, header):
-    """
-    convert subscripts of a matrix to map coordinates 
-    rows, cols: subscripts of the data matrix, starting from 0
-    return
-        X, Y: coordinates in map units
+    """convert subscripts of a matrix to map coordinates rows, cols: subscripts of the data matrix, starting from 0
+
+    Args: 
+        rows: rows in the array
+        cols: cols in the array
+
+    Returns: 
+        X and Y coordinate values
+
     """
     #x and y coordinate of the centre of the first cell in the matrix
     if not isinstance(rows, np.ndarray):
@@ -409,12 +439,14 @@ def sub2map(rows, cols, header):
 #% Extent compare between two Raster objects
 def compare_extent(extent0, extent1):
     """Compare and show the difference between two Raster extents
-    extent0, extent1: objects or extent dicts to be compared
-    displaye: whether to show the extent in figures
+
+    Args:
+        extent0, extent1: objects or extent dicts to be compared
+        displaye: whether to show the extent in figures
+
     Return:
-        0 extent0>=extent1
-        1 extent0<extent1
-        2 extent0 and extent1 have intersections
+        int: 0 extent0>=extent1; 1 extent0<extent1; 2 extent0 and extent1 have intersections
+
     """
     logic_left = extent0[0]<=extent1[0]
     logic_right = extent0[1]>=extent1[1]
@@ -443,11 +475,10 @@ def extent2shape_points(extent):
 
 def _adjust_map_extent(extent, relocate=True, scale_ratio=1):
     """
-    Adjust the extent (left, right, bottom, top) to a new staring point 
-        and new unit. extent values will be divided by the scale_ratio
+    Adjust the extent (left, right, bottom, top) to a new staring point and new unit. extent values will be divided by the scale_ratio
+
     Example:
-        if scale_ratio = 1000, and the original extent unit is meter,
-        then the unit is converted to km, and the extent is divided by 1000
+        if scale_ratio = 1000, and the original extent unit is meter, then the unit is converted to km, and the extent is divided by 1000
     """
     if relocate:
         left = 0 
