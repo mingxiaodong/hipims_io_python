@@ -637,11 +637,11 @@ class InputHipims:
                     **kwargs):
         """Show domain map of the object
         """
-        obj_dem = copy.copy(self.DEM)
-        if hasattr(self, 'Sections'):
-            for obj_sub in self.Sections:
-                overlayed_subs = obj_sub.overlayed_cell_subs_global
-                obj_dem.array[overlayed_subs] = np.nan            
+        obj_dem = copy.deepcopy(self.DEM)
+#        if hasattr(self, 'Sections'):
+#            for obj_sub in self.Sections:
+#                overlayed_subs = obj_sub.overlayed_cell_subs_global
+#                obj_dem.array[overlayed_subs] = np.nan            
         fig, ax = obj_dem.mapshow(title=title, cax_str='DEM(m)', **kwargs)
         cell_subs = self.Boundary.cell_subs
         legends = []
