@@ -48,13 +48,15 @@ def save_object(obj, file_name, compression=True):
     print(file_name+' has been saved')
 
 def save_as_dict(obj, file_name):
-    """Save all attributes of an object to a pickle
+    """Save all attributes of an input/output object to a pickle
     """
     obj_dict = copy.copy(obj.__dict__)
-    
-    obj_dict['DEM'] = obj.DEM.__dict__
-    obj_dict['Summary'] = obj.Summary.to_dict()
-    obj_dict['Boundary'] = obj.Boundary.__dict__
+    if hasattr(obj, 'DEM'):
+        obj_dict['DEM'] = obj.DEM.__dict__
+    if hasattr(obj, 'Summary'):
+        obj_dict['Summary'] = obj.Summary.to_dict()
+    if hasattr(obj, 'Boundary'):
+        obj_dict['Boundary'] = obj.Boundary.__dict__
     if hasattr(obj, 'Sections'):
         obj_dict.pop('Sections')
     if hasattr(obj, 'Rainfall'):
