@@ -56,6 +56,9 @@ class OutputHipims:
             self.num_of_sections = num_of_sections
             self._set_IO_folders()
             self._set_grid_header(asc_file=header_file_tag)
+        elif type(input_obj) is dict: # load from a dict
+            for key, value in input_obj.items():
+                self.__dict__[key] = value
         elif hasattr(input_obj, 'DEM'):
             # get information from the input object
             # case_folder, num_of_sections, header
@@ -318,9 +321,8 @@ def load_output_object(filename):
     obj_dict = load_object(filename)
     if type(obj_dict) is OutputHipims:
         obj_out = obj_dict
-    elif type(obj_dict) is dict:        
-        for key, value in obj_dict.items():
-            obj_out.__dict__[key] = value
+    elif type(obj_dict) is dict:
+        obj_out = OutputHipims(obj_dict)
     else:
         raise ValueError(filename+' should store either a dict or OutputHipims'
                          ' object')
