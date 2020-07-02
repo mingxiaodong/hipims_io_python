@@ -64,6 +64,9 @@ class Summary:
     def __init__(self, data_in): 
         if type(data_in) is str: # a jason file
             self.__setup_from_file(data_in)
+        elif type(data_in) is dict: # a jason file
+            for key, value in data_in.items():
+                self.__dict__[key] = value
         elif hasattr(data_in, 'DEM'): # a case_obj or dem_obj
             self.__setup_from_object(data_in)
 
