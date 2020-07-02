@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 from . import spatial_analysis as sp
 from .Raster import Raster
-from .indep_functions import save_object, _create_io_folders
+from .indep_functions import save_as_dict, _create_io_folders, load_object
 class OutputHipims:
     """To read and analyze otuput files from a HiPIMS flood model
 
@@ -303,9 +303,29 @@ class OutputHipims:
     def save_object(self, file_name):
         """Save the object to a pickle file
         """
-        save_object(self, file_name, compression=True)
+#        save_object(self, file_name, compression=True)
+        save_as_dict(self, file_name)
     
 #%% =======================Supporting functions===============================
+def load_output_object(filename):
+    """load object from a dictionary and return as an OutputHipims object
+    
+    Args:
+        filename: a string giving the object file name
+    Return: 
+        An object of OutputHipims
+    """
+    obj_dict = load_object(filename)
+    if type(obj_dict) is OutputHipims:
+        obj_out = obj_dict
+    elif type(obj_dict) is dict:        
+        for key, value in obj_dict.items():
+            obj_out.__dict__[key] = value
+    else:
+        raise ValueError(filename+' should store either a dict or OutputHipims'
+                         ' object')
+    return obj_out
+    
 def _combine_gauges_data_via_ind(case_folder, num_section, file_tag):
     """Combine gauges outputs from multi-gpu models according to gauges
 
