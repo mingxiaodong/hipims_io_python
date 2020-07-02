@@ -1123,7 +1123,7 @@ class InputHipimsSub(InputHipims):
 
 #%%****************************************************************************
 #********************************Static method*********************************
-def load_object(filename):
+def load_input_object(filename):
     """load object from a dictionary and return as an InputHipims object
     Args:
         filename: a string giving the object file name
