@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 from . import spatial_analysis as sp
 from .Raster import Raster
+from .Summary import Summary
 from .indep_functions import save_as_dict, _create_io_folders, load_object
 class OutputHipims:
     """To read and analyze otuput files from a HiPIMS flood model
@@ -58,7 +59,10 @@ class OutputHipims:
             self._set_grid_header(asc_file=header_file_tag)
         elif type(input_obj) is dict: # load from a dict
             for key, value in input_obj.items():
-                self.__dict__[key] = value
+                if key=='Summary':
+                    self.Summary = Summary(value)
+                else:
+                    self.__dict__[key] = value
         elif hasattr(input_obj, 'DEM'):
             # get information from the input object
             # case_folder, num_of_sections, header
