@@ -16,9 +16,9 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
       name='hipims_io',
-      version='0.4.0',
+      version='0.4.6',
       description='To process input and output files of the HiPIMS model',
-      url='https://github.com/xiaxilin/hipims/tree/master/hipims_io',
+      url='https://github.com/mingxiaodong/hipims_io_python',
       author='Xiaodong Ming',
       author_email='xiaodong.ming@ncl.ac.uk',
       long_description=long_description,

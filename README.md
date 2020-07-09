@@ -1,6 +1,6 @@
 hipims_io
 --------
-Python code to process input and output files of [HiPIMS flood model](https://pypi.org/project/hipims/). This code follows [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html).
+Python code to process input and output files of [HiPIMS flood model](https://github.com/HEMLab/hipims). This code follows [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html).
 
 Python version: >=3.6. To use the full function of this package for processing raster and shapefile, gdal and pyshp are required.
 
@@ -36,8 +36,8 @@ A step-by-step tutorial to setup a HiPIMS input object with sample data:
 
 ```
 import os
+import numpy as np
 import hipims_io as hpio
-
 
 obj_dem, model_data = hpio.get_sample_data() # get sample data
 case_folder = os.path.join(os.getcwd(), 'hipims_case') # define a case folder in the current directory
@@ -54,6 +54,10 @@ obj_in.set_boundary_condition(bound_list, outline_boundary='fall')
 # set rainfall mask and source
 rain_source = model_data['rain_source']
 obj_in.set_rainfall(rain_mask=0, rain_source=rain_source)
+
+# set manning parameter
+manning_array = np.zeros(obj_in.DEM.shape)+0.03 # create an array with the same shape of the DEM array
+obj_in.set_grid_parameter(manning=manning_array)
 
 # set monitor positions
 gauges_pos = model_data['gauges_pos']
