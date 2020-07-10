@@ -78,8 +78,6 @@ class Raster(object):
         extent = sp.header2extent(header)
         self.source_file = source_file
         self.projection = projection
-        if 'NODATA_value' in header:
-            array[array == header['NODATA_value']] = np.nan
         self.array = array
         self.shape = array.shape
         if array.shape != (header['nrows'], header['ncols']):
