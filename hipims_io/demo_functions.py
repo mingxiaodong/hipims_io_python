@@ -14,7 +14,7 @@ To do:
 ---------------
 
 """
-import os
+# import os
 import pkg_resources
 import numpy as np
 from .InputHipims import InputHipims
@@ -26,8 +26,9 @@ def demo_input(num_of_sections=1, set_example_inputs=True,
     """ A demonstration to generate a hipims input object
     
     Args:
-        set_example_inputs: (True|False) if True, initial condition, boundary condition, 
-            rainfall source, and gauge postion will be set to the input object according to sample data.
+        set_example_inputs: (True|False) if True, initial condition, boundary 
+            condition, rainfall source, and gauge postion will be set to the 
+            input object according to sample data.
         figname: (string) if given, a domain map will saved
 
     """
@@ -75,14 +76,15 @@ def get_sample_data():
     """ Get sample data for demonstartion
 
     Returns:
-        A DEM raster object and a dictionary with boundary_condition, rain_source, and gauges_pos data
+        A DEM raster object and a dictionary with boundary_condition,
+        rain_source, and gauges_pos data
     """
     dem_file = pkg_resources.resource_filename(__name__,
                                              'sample/DEM.gz')
     demo_data = {
         'boundary_condition': [
-            {'polyPoints': np.array([[2000, 2500],
-                                 [2200, 2200]]),
+            {'polyPoints': np.array([[1427, 195],
+                                 [1446, 243]]),
              'type': 'open',
              'hU': [[0, 100], [60, 40]]},
             {'polyPoints': np.array([[58, 1645],
