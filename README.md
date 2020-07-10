@@ -23,7 +23,8 @@ A quick demonstration to setup a HiPIMS input object with a data path contaning 
 import os
 import hipims_io as hpio
 from hipims_io.demo_functions import get_sample_data
-data_path = get_sample_data(return_path=True) # get the path of sample data
+dem_path, _ = get_sample_data(return_path=True) # get the path of sample data
+data_path = os.path.dirname(dem_path)
 case_folder = os.path.join(os.getcwd(), 'hipims_case') # define a case folder in the current directory
 obj_in = hpio.InputHipims(case_folder=case_folder, num_of_sections=1, 
                           data_path=data_path) # create input object
