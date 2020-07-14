@@ -14,6 +14,7 @@ To do:
 ---------------
 
 """
+import os
 import copy
 import math
 import fiona
@@ -435,7 +436,7 @@ class Raster(object):
         transform = Affine.translation(x00, y00)*Affine.scale(
                                                        cellsize, -cellsize)
         if output_file is None:
-            filename = '/tmp/new.tif'
+            filename = os.path.join('tmp', 'new.tif')
         else:
             if output_file.endswith('.tif'):
                 filename = output_file
@@ -476,7 +477,7 @@ class Raster(object):
         kwargs.update({'crs': dst_crs, 'transform': transform, 'width': width,
                        'height': height, 'nodata':self.header['NODATA_value']})
         if output_file is None:
-            filename = '/tmp/new.tif'
+            filename = os.path.join('tmp', 'new.tif')
         else:
             if output_file.endswith('.tif'):
                 filename = output_file
