@@ -900,7 +900,6 @@ class InputHipims:
         # overlayed_id, and section_id
         if hasattr(self, 'overlayed_id'):
             cell_id = []
-            cell_id = np.concatenate(cell_id, axis=0)               
             if 'top_high' in self.overlayed_id:
                 cell_id += self.overlayed_id['top_high'].tolist()
             if 'bottom_low' in self.overlayed_id:
