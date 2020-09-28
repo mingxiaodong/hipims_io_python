@@ -44,7 +44,7 @@ class OutputHipims:
 
     """  
     def __init__(self, input_obj=None, case_folder=None,
-                 num_of_sections=None, header_file_tag=None):
+                 num_of_sections=1, header_file_tag=None):
         """Initialize the object with a InputHiPIMS object or a case folder and
             the number of sections
 
@@ -172,6 +172,7 @@ class OutputHipims:
             if var_name not in self.gauge_values_all.keys():
                 self.read_gauges_file(var_name, compressed)
         if gauge_ind is not None:
+            gauge_ind = np.array(gauge_ind, ndmin=2)
             # add position data for a gauge
             values = self.gauge_values_all[var_name]+0
             values_pd = self.times_simu.copy()
@@ -187,7 +188,7 @@ class OutputHipims:
                 values_pd['values_x'] = one_gauge_v[0]
                 values_pd['values_y'] = one_gauge_v[1]
             elif var_name == 'eta':
-                if gauge_ind.size == 1:
+                if gauge_ind.size > 1:
                     raise ValueError('gauge_ind for eta must be a scalar')
                 else:
                     one_gauge_v = values[:, gauge_ind]
