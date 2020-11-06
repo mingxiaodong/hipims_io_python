@@ -233,7 +233,7 @@ class Raster(object):
                                             method=method)
         new_obj = copy.deepcopy(self)
         new_obj.array = array_interp
-        new_obj.source_file = 'mask_'+new_obj.source_file
+        new_obj.source_file = self.source_file
         return new_obj
     
     def grid_interpolate(self, value_grid, method='nearest'):
@@ -311,6 +311,7 @@ class Raster(object):
         cols[cols > self.header['ncols']-1] = self.header['ncols']-1
         cols[cols < 0] = 0
         new_array = self.array[rows, cols]
+        new_array[new_array == self.header['NODATA_value']] = np.nan
         obj_output = Raster(array=new_array, header=new_header)
         return obj_output
 
