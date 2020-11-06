@@ -311,6 +311,7 @@ class Raster(object):
         cols[cols > self.header['ncols']-1] = self.header['ncols']-1
         cols[cols < 0] = 0
         new_array = self.array[rows, cols]
+        new_array = new_array+0.0
         new_array[new_array == self.header['NODATA_value']] = np.nan
         obj_output = Raster(array=new_array, header=new_header)
         return obj_output
