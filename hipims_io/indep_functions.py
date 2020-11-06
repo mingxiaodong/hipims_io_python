@@ -14,6 +14,7 @@ To do:
 
 """
 import copy
+import pandas as pd
 import gzip
 import pickle
 import os
@@ -381,11 +382,14 @@ def _mask2dict(obj_mask, new_header=None):
     if new_header is not None:
         obj_mask = obj_mask.assign_to(new_header)
     array = obj_mask.array
-    v_unique = np.unique(array[~np.isnan(array)])
-    index = []
-    for onevalue in v_unique:
-        ind = np.where(array==onevalue)
-        index.append(ind)
+    ind_rc = np.where(~np.isnan(array))
+    mask_value = array[~np.isnan(array)]
+    df = pd.DataFrame({'Row':ind_rc[0], 'Col':ind_rc[1], 'V':mask_value})
+    gb = df.groupby('V')
+    gb_list = [gb.get_group(x) for x in gb.groups]
+    v_unique = [x.V.iloc[0] for x in gb_list]
+    v_unique = np.array(v_unique)
+    index = [(np.array(x.Row), np.array(x.Col)) for x in gb_list]
     mask_dict = {'value':v_unique, 'index':index}
     return mask_dict
 
