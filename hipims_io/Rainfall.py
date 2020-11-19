@@ -237,7 +237,7 @@ class Rainfall:
         over the model domain	
         """	
         value_y = self.get_time_series(method=method)
-        value_y = value_y[-1, :]
+        value_y = value_y[:, -1]
         fig, ax = plt.subplots()        	
         if hasattr(self, 'time_dt'):	
             time_x = self.time_dt	
