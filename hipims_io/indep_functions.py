@@ -284,7 +284,7 @@ def _get_cell_id_array(dem_array):
     """
     # convert DEM to a two-value array: NaNs and Ones
     # and flip up and down
-    dem_array_flip = np.flipud(dem_array*0+1)
+    dem_array_flip = np.flipud(dem_array*0+1).astype('float64')
     # Return the cumulative sum of array elements over a given axis
     # treating NaNs) as zero.
     nancumsum_vector = np.nancumsum(dem_array_flip)
