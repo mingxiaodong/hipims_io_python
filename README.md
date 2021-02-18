@@ -8,6 +8,13 @@ To install hipims_io from command window/terminal:
 ```
 pip install hipims_io
 ```
+To install using github repo:
+```
+git clone https://github.com/mingxiaodong/hipims_io_python.git
+cd hipims_io_python
+pip install .
+```
+
 A quick demonstration to setup a HiPIMS input object with a sample DEM:
 ```
 import hipims_io as hp
