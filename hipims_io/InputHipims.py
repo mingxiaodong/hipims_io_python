@@ -994,28 +994,9 @@ class InputHipims:
             ind_num = 0
             for i in np.arange(obj_boundary.num_of_bound):
                 hU_source = hU_sources[i]
-                cell_subs = obj_boundary.cell_subs[i] # row and col
                 if hU_source is not None:
                     file_name = os.path.join(field_dir,
                                              'hU_BC_'+str(ind_num)+'.dat')
-                    if hU_source.shape[1] == 2:
-                        # flow is given rather than speed
-                        if np.unique(cell_subs[1]).size==1: # vertical line
-                            theta = np.pi*0.5
-                        elif np.unique(cell_subs[0]).size==1: # horizontal line
-                            theta = 0
-                        else:
-                            boundary_slope = np.polyfit(cell_subs[1],
-                                                        cell_subs[0], 1)
-                            theta = np.arctan(boundary_slope[0])
-                        boundary_length = cell_subs[0].size* \
-                                          self.DEM.header['cellsize']
-                        hUx = hU_source[:, 1]*np.sin(theta)/boundary_length
-                        hUy = hU_source[:, 1]*np.cos(theta)/boundary_length
-                        hU_source = np.c_[hU_source[:, 0], hUx, hUy]
-                        print('Flow series on boundary '+str(i)+
-                              ' is converted to velocities')
-                        print('Theta = '+'{:.2f}'.format(theta/np.pi*180)+'degree')
                     np.savetxt(file_name, hU_source, fmt=fmt_hu, delimiter=' ')
                     ind_num = ind_num+1
                     file_names_list.append(file_name)
