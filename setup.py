@@ -16,7 +16,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
       name='hipims_io',
-      version='0.5.1',
+      version='0.5.2.1',
       description='To process input and output files of the HiPIMS model',
       url='https://github.com/mingxiaodong/hipims_io_python',
       author='Xiaodong Ming',
@@ -28,7 +28,7 @@ setup(
                    'License :: OSI Approved :: MIT License',
                    'Programming Language :: Python :: 3',
                    'Operating System :: OS Independent',],
-      keywords='hipims model IO',
+      keywords='HiPIMS model IO',
       license='LICENSE.txt',
       packages=find_packages(),
       include_package_data=True,
@@ -38,7 +38,7 @@ setup(
                                   'sample/rain_mask.gz',
                                   'sample/rain_source.csv',
                                   'sample/Example_data.npy'],},
-#      install_requires=['gdal', 'scipy', 'pyshp'],
+      install_requires=['rasterio', 'scipy', 'pyshp'],
       python_requires='>=3.6')
 
 """
