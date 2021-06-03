@@ -163,7 +163,24 @@ class Raster(object):
         xllcorner = min(x_centre)-0.5*self.header['cellsize']
         yllcorner = min(y_centre)-0.5*self.header['cellsize']
         header_new = copy.deepcopy(self.header)
-        array_new = self.array[min(rows):max(rows), min(cols):max(cols)]
+        if max(rows) >= self.header['nrows']:
+            max_row = self.header['nrows']
+        else:
+            max_row = max(rows)+1
+        if max(cols) >= self.header['ncols']:
+            max_col = self.header['ncols']
+        else:
+            max_col = max(cols)+1
+        if min(rows) <= 0:
+            min_row = 0
+        else:
+            min_row = min(rows) 
+        if min(cols) <= 0:
+            min_col = 0
+        else:
+            min_col = min(cols) 
+        array_new = self.array[min_row:max_row,
+                               min_col:max_col]
         header_new['nrows'] = array_new.shape[0]
         header_new['ncols'] = array_new.shape[1]
         header_new['xllcorner'] = xllcorner
@@ -230,6 +247,7 @@ class Raster(object):
                 shapes = [feature['geometry'] for feature in shapefile]
         else:
             shapes = shp_filename
+        shapes = [x for x in shapes if x != None]
         out_image, _ = mask.mask(ds_rio, shapes) #, crop=True
         rasterized_array = out_image[0]
         rasterized_array[np.isnan(rasterized_array)] = ds_rio.nodata
@@ -384,6 +402,31 @@ class Raster(object):
         if hasattr(self, 'crs'):
             obj_new.crs = self.crs
         return obj_new
+    
+    def paste_on(self, obj_large):
+        """ Paste the object to a larger grid defined by obj_large and
+        replace corresponding grid values with the object array
+
+        If their cellsizes MUST be equal
+        """
+        header_s = self.header
+        header_l = obj_large.header
+        x, y = self.to_points()
+        r0, c0 = sp.map2sub(self.extent[0]+self.cellsize/2, 
+                            self.extent[-1]-self.cellsize/2,
+                            header_l)
+        rows = np.arange(r0, r0+header_s['nrows'])
+        cols = np.arange(c0, c0+header_s['ncols'])
+        # cut array outside the range of the large raster grid
+        ind_r = np.logical_and(rows > 0, rows <= header_l['nrows']-1)
+        rows = rows[ind_r]
+        ind_c = np.logical_and(cols > 0, cols <= header_l['ncols']-1)
+        cols = cols[ind_c]
+        array_small = self.array[ind_r, :]
+        array_small = array_small[:, ind_c]
+        rows_grid, cols_grid = np.meshgrid(rows, cols, indexing='ij')
+        obj_large.array[rows_grid, cols_grid] = array_small
+        return obj_large
 
     def to_points(self):
         """ Get X and Y coordinates of all raster cells
