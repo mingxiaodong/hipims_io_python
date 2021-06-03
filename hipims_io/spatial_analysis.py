@@ -407,8 +407,8 @@ def map2sub(X, Y, header):
     rows = (y0-Y)/header['cellsize'] # row and col number starts from 0
     cols = (X-x0)/header['cellsize']
     if isinstance(rows, np.ndarray):
-        rows = rows.astype('int64')
-        cols = cols.astype('int64') #.astype('int64')
+        rows = np.round(rows).astype('int64')
+        cols = np.round(cols).astype('int64') #.astype('int64')
     else:
         rows = int(rows)
         cols = int(cols)
