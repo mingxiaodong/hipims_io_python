@@ -413,8 +413,9 @@ class InputHipims:
         """
         if param_name not in InputHipims.__grid_files:
             InputHipims.__grid_files.append(param_name)
+            InputHipims._file_tag_list.append(param_name)
         self.attributes[param_name] = param_value
-        print(param_name+ 'is added to the InputHipims object')
+        print(param_name+ ' is added to the InputHipims object')
     
     def set_num_of_sections(self, num_of_sections):
         """ set the number of divided sections to run a case
