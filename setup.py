@@ -16,7 +16,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
       name='hipims_io',
-      version='0.5.2.1',
+      version='0.5.3',
       description='To process input and output files of the HiPIMS model',
       url='https://github.com/mingxiaodong/hipims_io_python',
       author='Xiaodong Ming',
