@@ -403,7 +403,7 @@ class Raster(object):
             obj_new.crs = self.crs
         return obj_new
     
-    def paste_on(self, obj_large):
+    def paste_on(self, obj_large, ignore_nan=True):
         """ Paste the object to a larger grid defined by obj_large and
         replace corresponding grid values with the object array
 
@@ -425,6 +425,10 @@ class Raster(object):
         array_small = self.array[ind_r, :]
         array_small = array_small[:, ind_c]
         rows_grid, cols_grid = np.meshgrid(rows, cols, indexing='ij')
+        if ignore_nan:
+            array_large = obj_large.array[rows_grid, cols_grid]
+            ind_nan = np.isnan(array_small)
+            array_small[ind_nan] = array_large[ind_nan]
         obj_large.array[rows_grid, cols_grid] = array_small
         return obj_large
 
