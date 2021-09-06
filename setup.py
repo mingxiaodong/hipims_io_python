@@ -16,7 +16,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
       name='hipims_io',
-      version='0.5.3',
+      version='0.5.4',
       description='To process input and output files of the HiPIMS model',
       url='https://github.com/mingxiaodong/hipims_io_python',
       author='Xiaodong Ming',
@@ -38,13 +38,14 @@ setup(
                                   'sample/rain_mask.gz',
                                   'sample/rain_source.csv',
                                   'sample/Example_data.npy'],},
-      install_requires=['rasterio', 'scipy', 'pyshp'],
+      install_requires=['rasterio', 'scipy', 'pyshp', 'fiona', 
+                        'matplotlib', 'numpy', 'pandas'],
       python_requires='>=3.6')
 
 """
 Required python package
 os, setuptools, copy, math, numpy, scipy, shutil, datetime, imageio, matplotlib,
-mpl_toolkits, pkg_resources, gzip, pickle, warnings, pandas, shapefile
+mpl_toolkits, pkg_resources, gzip, pickle, warnings, pandas
 
 #Sometimes you’ll want to use packages that are properly arranged with 
 #setuptools, but aren’t published to PyPI. In those cases, you can specify a 
