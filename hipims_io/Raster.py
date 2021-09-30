@@ -9,7 +9,8 @@ Raster
 =======
 
 To do:
-    Read, write and analyze gridded Raster data
+    1. Read, write, analyze, and visualise gridded raster data
+    2. Convert shape data to raster data
 
 ---------------
 
@@ -58,6 +59,13 @@ class Raster(object):
                 NODATA_value
             crs: coordinate reference system, either epsg(epsg code, int) or
                 wkt(string), or a rasterio.crs object
+        Example: define a raster object with a random array
+            array = np.random.rand(10, 10)
+            header = {'ncols':array.shape[1], 'nrows':array.shape[0],
+                      'xllcorner':0, 'yllcorner':1,
+                      'cellsize':100, 'NODATA_value':-9999}
+            obj_ras = Raster(array=array, header=header)
+            obj_ras.mapshow() %plot map
 
         """
         # get data from file or arguments
