@@ -16,7 +16,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
       name='hipims_io',
-      version='0.5.4',
+      version='0.5.5',
       description='To process input and output files of the HiPIMS model',
       url='https://github.com/mingxiaodong/hipims_io_python',
       author='Xiaodong Ming',
@@ -39,7 +39,7 @@ setup(
                                   'sample/rain_source.csv',
                                   'sample/Example_data.npy'],},
       install_requires=['rasterio', 'scipy', 'pyshp', 'fiona', 
-                        'matplotlib', 'numpy', 'pandas'],
+                        'matplotlib', 'numpy', 'pandas', 'imageio'],
       python_requires='>=3.6')
 
 """
