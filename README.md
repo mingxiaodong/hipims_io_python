@@ -47,10 +47,10 @@ import os
 import numpy as np
 import hipims_io as hpio
 
-obj_dem, model_data = hpio.get_sample_data() # get sample data
+dem_file, model_data, _ = hpio.get_sample_data() # get sample data
 case_folder = os.path.join(os.getcwd(), 'hipims_case') # define a case folder in the current directory
 # create a single-gpu input object
-obj_in = hpio.InputHipims(dem_data=obj_dem, num_of_sections=1, case_folder=case_folder)
+obj_in = hpio.InputHipims(dem_data=dem_file, num_of_sections=1, case_folder=case_folder)
 
 # set a initial water depth of 0.5 m
 obj_in.set_initial_condition('h0', 0.5)
