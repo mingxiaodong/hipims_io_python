@@ -235,34 +235,61 @@ class Raster(object):
             obj_new.crs = self.crs
         return obj_new
     
-    def rasterize(self, shp_filename):
+    def rasterize(self, shp_filename, attr_name=None):
         """
-        rasterize the shapefile to the raster object and return a bool array
-            with Ture value in and on the polygon/polyline
+        rasterize a shapefile to the raster object and return a bool array
+            with Ture value in and on the polygon/polyline or return an array 
+            with values burned from one shapefile attritute whose name
+            is given by attr_name
 
-        Args:
-            shp_filename: string for shapefile name, or a list of shapefile
-                geometry with attributes 'type' and 'coordinates'
+        Parameters
+        ----------
+        shp_filename : str or a list of shapes with attributes 'geometry'
+            shapefile must has the same crs with the raster file
+        attr_name : str, optional
+            name of the shape attribute to be burned into the raster. 
+            The default is None.
 
-        Return:
-            index_array: an array of True|False values masking the shapefile
+        Returns
+        -------
+        out_array : numpy array
+            True|False values masking the shapefile, or
+            Array providing values of one attribute of the shapefile
 
         """
+        
         from rasterio import mask
+        from rasterio import features
         ds_rio = self.to_rasterio_ds()
         if type(shp_filename) is str:
             with fiona.open(shp_filename, 'r') as shapefile:
-                shapes = [feature['geometry'] for feature in shapefile]
+                if attr_name is not None:
+                    shapes = [(feature['geometry'], 
+                               feature['properties'][attr_name]) for 
+                              feature in shapefile]
+                else:
+                    shapes = [feature['geometry'] for feature in shapefile]
         else:
             shapes = shp_filename
-        shapes = [x for x in shapes if x != None]
-        out_image, _ = mask.mask(ds_rio, shapes) #, crop=True
-        rasterized_array = out_image[0]
-        rasterized_array[np.isnan(rasterized_array)] = ds_rio.nodata
-        index_array = np.full(rasterized_array.shape, True)
-        index_array[rasterized_array == ds_rio.nodata] = False
+        
+        if attr_name is None:
+            shapes = [x for x in shapes if x != None]
+            out_image, _ = mask.mask(ds_rio, shapes)
+            rasterized_array = out_image[0]
+            rasterized_array[np.isnan(rasterized_array)] = ds_rio.nodata
+            index_array = np.full(rasterized_array.shape, True)
+            index_array[rasterized_array == ds_rio.nodata] = False
+            out_array = index_array
+        else:
+            shapes = [x for x in shapes if x[0] != None]
+            shapes = ((geom,value) for geom, value in shapes)
+            out_arr = ds_rio.read(1)+np.nan
+            burned = features.rasterize(shapes=shapes, fill=0, out=out_arr, 
+                                        transform=ds_rio.transform)
+            burned[burned == ds_rio.nodata] = np.nan
+            out_array = burned
         ds_rio.close()
-        return index_array
+        return out_array
         
     def resample(self, new_cellsize, method='bilinear'):
         """ Resample the raster object to a new resolution
@@ -521,16 +548,22 @@ class Raster(object):
             out_f.write(array_data, 1)
     
     def to_rasterio_ds(self):
-        
+        """
+        convert object to a rasterio dataset
+
+        Returns
+        -------
+        ds_rio : rasterio dataset
+        """
         if not hasattr(self, 'meta'):
             self.get_meta()
         meta = self.meta
         filename = 'temp.tif'
         ds_rio = rio.open(filename, 'w+', **meta)
         ds_rio.write(self.array, 1)
-        os.remove(filename)
+        if os.path.isfile(filename):
+            os.remove(filename)
         return ds_rio
-
     
     def get_meta(self, src_epsg=27700):
         """ Get rasterio meta data
@@ -657,7 +690,15 @@ class Raster(object):
         """
         fig, ax = gs.vectorshow(self, obj_y, **kwargs)
         return fig, ax
+#%% statistics function without nan
+    def max(self, axis=None):
+        return np.nanmax(self.array, axis=axis)
     
+    def min(self, axis=None):
+        return np.nanmin(self.array, axis=axis)
+    
+    def median(self, axis=None):
+        return np.nanmedian(self.array, axis=axis)
 #%%
 def merge(obj_origin, obj_target, resample_method='bilinear'):
     """Merge the obj_origin to obj_target
