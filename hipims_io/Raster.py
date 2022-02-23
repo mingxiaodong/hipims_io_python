@@ -235,7 +235,7 @@ class Raster(object):
             obj_new.crs = self.crs
         return obj_new
     
-    def rasterize(self, shp_filename, attr_name=None, ignore_nan=False):
+    def rasterize(self, shp_filename, attr_name=None, include_nan=False):
         """
         rasterize a shapefile to the raster object and return a bool array
             with Ture value in and on the polygon/polyline or return an array 
