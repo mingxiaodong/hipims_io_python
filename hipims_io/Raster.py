@@ -235,7 +235,7 @@ class Raster(object):
             obj_new.crs = self.crs
         return obj_new
     
-    def rasterize(self, shp_filename, attr_name=None):
+    def rasterize(self, shp_filename, attr_name=None, ignore_nan=False):
         """
         rasterize a shapefile to the raster object and return a bool array
             with Ture value in and on the polygon/polyline or return an array 
@@ -249,6 +249,9 @@ class Raster(object):
         attr_name : str, optional
             name of the shape attribute to be burned into the raster. 
             The default is None.
+        include_nan: logical, optional
+            whether include index of nan cells.
+            The default is False.
 
         Returns
         -------
@@ -278,7 +281,8 @@ class Raster(object):
             rasterized_array = out_image[0]
             rasterized_array[np.isnan(rasterized_array)] = ds_rio.nodata
             index_array = np.full(rasterized_array.shape, True)
-            index_array[rasterized_array == ds_rio.nodata] = False
+            if not include_nan:
+                index_array[rasterized_array == ds_rio.nodata] = False
             out_array = index_array
         else:
             shapes = [x for x in shapes if x[0] != None]
@@ -286,7 +290,8 @@ class Raster(object):
             out_arr = ds_rio.read(1)+np.nan
             burned = features.rasterize(shapes=shapes, fill=0, out=out_arr, 
                                         transform=ds_rio.transform)
-            burned[burned == ds_rio.nodata] = np.nan
+            if not include_nan:
+                burned[burned == ds_rio.nodata] = np.nan
             out_array = burned
         ds_rio.close()
         return out_array
