@@ -279,10 +279,10 @@ class Raster(object):
             shapes = [x for x in shapes if x != None]
             out_image, _ = mask.mask(ds_rio, shapes)
             rasterized_array = out_image[0]
-            rasterized_array[np.isnan(rasterized_array)] = ds_rio.nodata
-            index_array = np.full(rasterized_array.shape, True)
             if not include_nan:
-                index_array[rasterized_array == ds_rio.nodata] = False
+                rasterized_array[np.isnan(rasterized_array)] = ds_rio.nodata
+            index_array = np.full(rasterized_array.shape, True)
+            index_array[rasterized_array == ds_rio.nodata] = False
             out_array = index_array
         else:
             shapes = [x for x in shapes if x[0] != None]
@@ -290,8 +290,7 @@ class Raster(object):
             out_arr = ds_rio.read(1)+np.nan
             burned = features.rasterize(shapes=shapes, fill=0, out=out_arr, 
                                         transform=ds_rio.transform)
-            if not include_nan:
-                burned[burned == ds_rio.nodata] = np.nan
+            burned[burned == ds_rio.nodata] = np.nan
             out_array = burned
         ds_rio.close()
         return out_array
