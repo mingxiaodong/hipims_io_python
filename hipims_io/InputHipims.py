@@ -2,7 +2,7 @@
 # @Author: Xiaodong Ming
 # @Date:   2021-09-02 11:34:09
 # @Last Modified by:   Xiaodong Ming
-# @Last Modified time: 2022-03-03 16:12:26
+# @Last Modified time: 2022-03-03 17:55:06
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -462,7 +462,7 @@ class InputHipims:
                 is true, including manning, sewer_sink, cumulative_depth,
                 hydraulic_conductivity, capillary_head, water_content_diff
         """
-        ignore_file_lists = ['manning', 'sewer_sink', 'precipitation',
+        ignore_file_lists = ['manning', 'sewer_sink',
                   'cumulative_depth', 'hydraulic_conductivity',
                   'capillary_head', 'water_content_diff']
         self._make_data_dirs()
