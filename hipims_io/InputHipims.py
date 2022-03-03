@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# @Author: Xiaodong Ming
+# @Date:   2021-09-02 11:34:09
+# @Last Modified by:   Xiaodong Ming
+# @Last Modified time: 2022-03-03 16:12:26
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -444,7 +449,7 @@ class InputHipims:
 
 #%%****************************************************************************
 #************************Write input files*************************************
-    def write_input_files(self, file_tag=None):
+    def write_input_files(self, file_tag=None, ignore_one_value_files=False):
         """ Write input files
 
         To classify the input files and call functions needed to write each
@@ -453,9 +458,25 @@ class InputHipims:
         Args:
             file_tag: a string or list of string giving the name(s) of input
                 files without suffix
+            ignore_one_value_files: do not write one value grid files if it
+                is true, including manning, sewer_sink, cumulative_depth,
+                hydraulic_conductivity, capillary_head, water_content_diff
         """
+        ignore_file_lists = ['manning', 'sewer_sink', 'precipitation',
+                  'cumulative_depth', 'hydraulic_conductivity',
+                  'capillary_head', 'water_content_diff']
         self._make_data_dirs()
-        grid_files = InputHipims.__grid_files
+        
+        if ignore_one_value_files:
+            for one_file in ignore_file_lists:
+                file_value = np.array(self.attributes[one_file])
+                if file_value.size > 1: # remove files with more than one value
+                    ignore_file_lists.remove(one_file)
+            # rectify grid file list by removing the one value files
+            grid_files = [x for x in InputHipims.__grid_files if x not in ignore_file_lists]
+        else:
+            grid_files = InputHipims.__grid_files
+
         if file_tag is None or file_tag == 'all': # write all files
             write_list = self._file_tag_list
             if self.num_of_sections > 1:
@@ -463,6 +484,7 @@ class InputHipims:
             self.write_mesh_file()
             self.write_runtime_file()
             self.write_device_file()
+            self.write_default_param_file()
         elif type(file_tag) is str:
             write_list = [file_tag]
         elif type(file_tag) is list:
@@ -481,7 +503,35 @@ class InputHipims:
             elif one_file == 'gauges_pos':
                 self.write_gauges_position()
             else:
-                raise ValueError(one_file+' is not recognized')
+                print(one_file+' is ignored')
+                #raise ValueError(one_file+' is not recognized')
+
+    def write_default_param_file(self):
+        """ write default_param.dat to provide default values of grid-based
+        parameters
+        """
+        default_params = {
+                  'precipitation':0,
+                  'manning':0.035,
+                  'sewer_sink':0,
+                  'cumulative_depth':0, 
+                  'hydraulic_conductivity':0,
+                  'capillary_head':0,
+                  'water_content_diff':0}
+        for key, value in default_params.items():
+            file_value = np.array(self.attributes[key])
+            if file_value.size == 1: # remove files with more than one value
+                default_params[key] = self.attributes[key]
+        case_folder = self.get_case_folder()
+        if hasattr(self, 'Sections'):
+             for obj_section in self.Sections:
+                 obj_section.write_default_param_file()
+        else:
+            file_name = os.path.join(case_folder, 'input', 'field', 'default_param.dat')
+            with open(file_name, 'w') as file:
+                for key, value in default_params.items():
+                    file.write(key+' '+str(value)+'\n')
+        
 
     def write_grid_files(self, file_tag, is_single_gpu=False):
         """Write grid-based files
