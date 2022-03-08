@@ -700,13 +700,23 @@ class Raster(object):
         return fig, ax
 #%% statistics function without nan
     def max(self, axis=None):
+        # max value of the array ignoring nan values
         return np.nanmax(self.array, axis=axis)
     
     def min(self, axis=None):
+        # min value of the array ignoring nan values
         return np.nanmin(self.array, axis=axis)
     
     def median(self, axis=None):
+        # median value of the array ignoring nan values
         return np.nanmedian(self.array, axis=axis)
+    
+    def duplicate(self):
+        """ duplicate the Raster object and return a new one so that change 
+        the new object will not affect the original one
+        """
+        obj_duplicate = copy.deepcopy(self)
+        return obj_duplicate
 #%%
 def merge(obj_origin, obj_target, resample_method='bilinear'):
     """Merge the obj_origin to obj_target
