@@ -18,7 +18,7 @@ pip install .
 A quick demonstration to setup a HiPIMS input object with a sample DEM:
 ```
 import hipims_io as hp
-obj_in = hpio.demo_input() # create an input object and show domain map
+obj_in = hp.demo_input() # create an input object and show domain map
 ```
 A quick demonstration to setup a HiPIMS input object with a data path contaning the following files:
 - DEM.gz/.asc/.tif (essential file, in projected crs)
