@@ -38,7 +38,7 @@ setup(
                                   'sample/rain_mask.gz',
                                   'sample/rain_source.csv',
                                   'sample/Example_data.npy'],},
-      install_requires=['rasterio', 'scipy', 'pyshp', 'fiona', 'hydro_raster'
+      install_requires=['rasterio', 'scipy', 'pyshp', 'fiona', 'hydro_raster',
                         'matplotlib', 'numpy', 'pandas', 'imageio'],
       python_requires='>=3.6')
 
