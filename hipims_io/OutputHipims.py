@@ -70,6 +70,7 @@ class OutputHipims:
             self.num_of_sections = input_obj.num_of_sections
             self.header = input_obj.header
             self.dem_array = input_obj.DEM.array
+            self.crs = input_obj.DEM.crs
             self.output_folder = input_obj._data_folders['output']
             self.input_folder = input_obj._data_folders['input']
             self.Summary = input_obj.Summary
@@ -101,7 +102,6 @@ class OutputHipims:
             times, time in seconds
 
             values, gauge values corresponding to the gauges position
-
 
         """
         if self.num_of_sections==1:
@@ -150,11 +150,53 @@ class OutputHipims:
             file_tag = file_tag+'.gz'
         if self.num_of_sections==1:
             file_name = os.path.join(self.output_folder, file_tag)
-            grid_array, _, _ = sp.arcgridread(file_name)
+            if os.path.isfile(file_name):
+                grid_array, _, _ = sp.arcgridread(file_name)
+            else:
+                warnings.warn(file_name+' is not found!')
+                grid_array = None
         else: # multi-GPU
             grid_array = self._combine_multi_gpu_grid_data(file_tag)
-        grid_obj = Raster(array=grid_array, header=self.header)
+        if grid_array is None:
+            warnings.warn(file_tag+' is not read successfully!')
+            grid_obj = None
+        else:
+            grid_obj = Raster(array=grid_array, header=self.header)
+            if hasattr(self, 'crs'):
+                grid_obj.set_crs(self.crs)
         return grid_obj
+    
+    def read_velocity_files(self, time_tag):
+        """
+        read h, hUx and hUy files, calculate velocity and return a grid obj
+
+        Parameters
+        ----------
+        time_tag : string
+            time string in seconds, e.g. '7200'
+
+        Returns
+        -------
+        velocity_ras : Raster object
+            velocity values on the model grid.
+        list: list of 2D array
+            velocity values in x and y direction.
+
+        """
+        file_tag_x = 'hUx_'+time_tag
+        file_tag_y = 'hUy_'+time_tag
+        file_tag_h = 'h_'+time_tag
+        grid_x = self.read_grid_file(file_tag=file_tag_x)
+        grid_y = self.read_grid_file(file_tag=file_tag_y)
+        grid_h = self.read_grid_file(file_tag=file_tag_h)
+        array_h = grid_h.array+1e-6
+        array_u = grid_x.array/array_h
+        array_v = grid_y.array/array_h
+        array_vel = np.sqrt(array_u**2+array_v**2)
+        velocity_ras = Raster(array=array_vel, header=self.header)
+        if hasattr(self, 'crs'):
+            velocity_ras.set_crs(self.crs)
+        return velocity_ras, [array_u, array_v]
     
     def add_gauge_results(self, var_name, gauge_name='All', gauge_ind=None,  
                           compressed=False):
@@ -200,18 +242,31 @@ class OutputHipims:
                 gauge_dict = {var_name:values_pd}
             self.gauge_values[gauge_name] = gauge_dict
     
-    def add_grid_results(self, result_names, compressed=False):
+    def add_grid_results(self, result_names='all', compressed=False):
         """Read and return Raster object to attribute 'grid_results'
 
         Args:
             result_names: string or list of string, gives the name of grid file
+                default is to read and save all asc files
 
         """
         if not hasattr(self, 'grid_results'):
             self.grid_results = {}
         if type(result_names) is not list: # for a list of files
-            result_names = [result_names]
+            if result_names=='all':
+                times_array, t_max = self._read_run_time()
+                result_names = ['h_max_'+'{:g}'.format(t_max)]
+                for one_time in times_array:
+                    result_names.append('h_'+'{:g}'.format(t_max))
+                    result_names.append('hUx_'+'{:g}'.format(t_max))
+                    result_names.append('hUy_'+'{:g}'.format(t_max))
+            else:
+                result_names = [result_names]
+        if len(result_names)>1:
+            print('To read files:')
+            print(result_names)
         for file_tag in result_names:
+            print('reading file '+file_tag)
             grid_obj = self.read_grid_file(file_tag, compressed)
             self.grid_results[file_tag] = grid_obj.array
 
@@ -226,6 +281,22 @@ class OutputHipims:
         else:
             raise IOError('date_time must be a datetime object or a string')
     
+    def _read_run_time(self):
+        # read the times_setup file to get time strings of outputs
+        if self.num_of_sections==1:
+            time_file = os.path.join(self.case_folder, 'input', 
+                                     'times_setup.dat')
+        else:
+            time_file = os.path.join(self.case_folder, 'times_setup.dat')
+        time_array = np.loadtxt(time_file)
+        t0 = time_array[0]
+        t_max = time_array[1]
+        dt = time_array[3]
+        num_step = (t_max-t0)/dt+1
+        num_step = int(num_step)
+        times_array = np.linspace(0, 3600, num_step)
+        return times_array, t_max
+    
     def _combine_multi_gpu_grid_data(self, asc_file_name):
         """Combine multi-gpu grid files into a single file
 
@@ -236,11 +307,23 @@ class OutputHipims:
         output_folder = self.output_folder
         grid_shape = (header_global['nrows'], header_global['ncols'])
         array_global = np.zeros(grid_shape)
-        for header0, folder0 in zip(header_list, output_folder):
-            ind_top, ind_bottom = _header2row_numbers(header0, header_global)
+        # check file existence
+        file_complete = True
+        for folder0 in output_folder:
             file_name = os.path.join(folder0, asc_file_name)
-            array_local, _, _ = sp.arcgridread(file_name)
-            array_global[ind_top:ind_bottom+1,:] = array_local
+            if os.path.isfile(file_name):
+                pass
+            else:
+                warnings.warn(file_name+' is not found!')
+                file_complete = False
+        if file_complete:
+            for header0, folder0 in zip(header_list, output_folder):
+                ind_top, ind_bottom = _header2row_numbers(header0, header_global)
+                file_name = os.path.join(folder0, asc_file_name)
+                array_local, _, _ = sp.arcgridread(file_name)
+                array_global[ind_top:ind_bottom+1,:] = array_local
+        else:
+            array_global = None
         return array_global
     
     def _set_IO_folders(self):
