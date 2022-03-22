@@ -19,7 +19,7 @@ import pkg_resources
 import numpy as np
 from .InputHipims import InputHipims
 from .OutputHipims import OutputHipims
-from .Raster import Raster
+#from hydro_raster.Raster import Raster
 
 def demo_input(num_of_sections=1, set_example_inputs=True,
                figname=None, dpi=200, **kwargs):
@@ -59,18 +59,6 @@ def demo_output(case_folder, num_of_sections=1):
                            num_of_sections=num_of_sections)
     return obj_out
 
-def demo_raster(figname=None):
-    """ A demonstration to read and show raster files
-
-    Args:
-        figname: (string) the file name to save the figure
-    """
-    dem_file = pkg_resources.resource_filename(__name__,
-                                             'sample/Example_DEM.asc')
-    obj_ras = Raster(dem_file)
-    fig, ax = obj_ras.mapshow(figname=figname, relocate=True, scale_ratio=1000)
-    ax.set_title('The Upper Lee catchment DEM (mAOD)')
-    return obj_ras
 
 def get_sample_data():
     """ Get sample data for demonstartion

@@ -34,7 +34,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime
 from datetime import timedelta
-from .Raster import Raster
+from hydro_raster.Raster import Raster
 #%%
 def get_time_series(rain_source, rain_mask=None, 
                      start_date=None, method='mean'):

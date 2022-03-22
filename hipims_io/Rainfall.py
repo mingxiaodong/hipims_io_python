@@ -21,7 +21,7 @@ import matplotlib.dates as mdates
 from scipy import stats
 from datetime import datetime
 from datetime import timedelta
-from .Raster import Raster
+from hydro_raster.Raster import Raster
 from . import indep_functions as indep_f
 class Rainfall:
     """ a class to set rainfall data for hipims

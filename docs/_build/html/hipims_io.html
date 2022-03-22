@@ -1,0 +1,1854 @@
+
+<!DOCTYPE html>
+
+<html lang="Python">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>hipims_io &#8212; hipims_io 0.4.6 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="hipims_io" href="modules.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="hipims-io">
+<h1>hipims_io<a class="headerlink" href="#hipims-io" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-hipims_io.Boundary">
+<span id="hipims-io-boundary"></span><h2>hipims_io.Boundary<a class="headerlink" href="#module-hipims_io.Boundary" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="boundary">
+<h3>Boundary<a class="headerlink" href="#boundary" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt>To do:</dt><dd><ul class="simple">
+<li><p>Define boundary conditions for hipims model</p></li>
+</ul>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="py class">
+<dt id="hipims_io.Boundary.Boundary">
+<em class="property">class </em><code class="sig-prename descclassname">hipims_io.Boundary.</code><code class="sig-name descname">Boundary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">boundary_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">outline_boundary</span><span class="o">=</span><span class="default_value">'fall'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Boundary.Boundary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for boundary conditions</p>
+<p>Attributes:</p>
+<blockquote>
+<div><p>num_of_bound: number of boundaries</p>
+<dl class="simple">
+<dt>type: a list of string 'open', 'rigid', 'fall'</dt><dd><p>input-output boundary is open boundary with given water
+depth and/or velocities</p>
+</dd>
+<dt>extent: (2-col numpy array) poly points to define the extent of a</dt><dd><p>IO boundary. If extent is not given, then the boundary is
+the domain outline</p>
+</dd>
+<dt>hSources: a two-col numpy array. The 1st col is time(s). The 2nd</dt><dd><p>col is water depth(m)</p>
+</dd>
+<dt>hUSources: a two-col numpy array. The 1st col is time(s). The 2nd</dt><dd><p>col is discharge(m3/s) or a three-col numpy array, the 2nd
+col and the 3rd col are velocities(m/s) in x and y
+direction, respectively.</p>
+</dd>
+</dl>
+<p>h_code: 3-element int to define the type of depth boundary</p>
+<p>hU_code: 3-element int to define th type of velocity boundary</p>
+<p>description: (str) description of a boundary</p>
+</div></blockquote>
+<dl class="py method">
+<dt id="hipims_io.Boundary.Boundary.get_summary">
+<code class="sig-name descname">get_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Boundary.Boundary.get_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get summary information strings</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Boundary.Boundary.print_summary">
+<code class="sig-name descname">print_summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Boundary.Boundary.print_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Print the summary information</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io.InputHipims">
+<span id="hipims-io-inputhipims"></span><h2>hipims_io.InputHipims<a class="headerlink" href="#module-hipims_io.InputHipims" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="inputhipims">
+<h3>InputHipims<a class="headerlink" href="#inputhipims" title="Permalink to this headline">¶</a></h3>
+<p>The module is based on the following assumptions:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Input DEM is a regular DEM file</p></li>
+<li><p>its map unit is meter</p></li>
+<li><p>its cellsize is the same in both x and y direction</p></li>
+<li><p>its reference position is on the lower left corner of the southwest cell</p></li>
+<li><p>All the other grid-based input files must be consistent with the DEM file</p></li>
+</ul>
+</div></blockquote>
+<p>To do:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>generate input (including sub-folder mesh and field) and output folders</p></li>
+<li><p>generate mesh file (DEM.txt) and field files</p></li>
+<li><p>divide model domain into small sections if multiple GPU is used</p></li>
+</ul>
+</div></blockquote>
+<hr class="docutils" />
+<dl class="py class">
+<dt id="hipims_io.InputHipims.InputHipims">
+<em class="property">class </em><code class="sig-prename descclassname">hipims_io.InputHipims.</code><code class="sig-name descname">InputHipims</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dem_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_of_sections</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">case_folder</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">data_path</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>To define input files for a HiPIMS flood model case</p>
+<p>Read data, process data, write input files, and save data of a model case.</p>
+<dl>
+<dt>Attributes:</dt><dd><p>num_of_sections: (scalar) number of GPUs to run the model
+shape: shape of the DEM array
+header: (dict) header of the DEM grid
+__attributes_default: (dict) default model attribute names and values
+attributes: (dict) model attribute names and values
+times:  (list/numpy array) of four values reprenting model run time in</p>
+<blockquote>
+<div><p>seconds: start, end, output interval, backup interval</p>
+</div></blockquote>
+<p>device_no: (int) the gpu device id(s) to run model
+param_per_landcover: dict, argument to set grid parameters using the</p>
+<blockquote>
+<div><p>Landcover object. Keys are grid parameter names. Each Value is a 
+dict with three keys: param_value, land_value, default_value. 
+Refer to Landcover for more details.</p>
+</div></blockquote>
+<p>Sections: a list of objects of child-class InputHipimsSub
+Boundary: A boundary object for boundary conditions
+DEM: a Raster object to provide DEM data [alias: Raster].
+Rainfall: a Rainfall object to process rainfall data
+Landcover: a Landcover object to provide landcover data for setting</p>
+<blockquote>
+<div><p>gridded parameters</p>
+</div></blockquote>
+<p>Summary: a Summary object to record model information</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.add_user_defined_parameter">
+<code class="sig-name descname">add_user_defined_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param_name</span></em>, <em class="sig-param"><span class="n">param_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.add_user_defined_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a grid-based user-defined parameter to the model</p>
+<dl>
+<dt>Args:</dt><dd><p>param_name: (str) name the parameter and the input file name too
+param_value: (scalar) or (numpy arary) with the same shape of the</p>
+<blockquote>
+<div><p>DEM array</p>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.domain_show">
+<code class="sig-name descname">domain_show</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">'Domain Map'</span></em>, <em class="sig-param"><span class="n">show_split</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.domain_show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Show domain map of the object</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>title: string to set the figure titile, 'Domain Map' is the defualt
+show_split: logical, show split lines for multi-gpu division</p>
+</dd>
+<dt>Retrun:</dt><dd><p>fig: figure handle
+ax: axis handle</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.get_case_folder">
+<code class="sig-name descname">get_case_folder</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.get_case_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the directory of the case.</p>
+<dl class="simple">
+<dt>Return: </dt><dd><p>string: The directory of the case</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.get_data_folders">
+<code class="sig-name descname">get_data_folders</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.get_data_folders" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the directories and subdirectories of the input and output data.</p>
+<dl class="simple">
+<dt>Return:</dt><dd><dl class="simple">
+<dt>string: a dict with four keys ('input', 'output', 'mesh', 'field')</dt><dd><p>providing their absolute paths</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.get_input_filenames">
+<code class="sig-name descname">get_input_filenames</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.get_input_filenames" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the input file names.</p>
+<dl class="simple">
+<dt>Return:</dt><dd><p>list: a list of string giving all input filenames without</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="hipims_io.InputHipims.InputHipims.gridded_parameter_keys">
+<code class="sig-name descname">gridded_parameter_keys</code><em class="property"> = ['h0', 'hU0x', 'hU0y', 'manning', 'sewer_sink', 'cumulative_depth', 'hydraulic_conductivity', 'capillary_head', 'water_content_diff']</em><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.gridded_parameter_keys" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.plot_rainfall_curve">
+<code class="sig-name descname">plot_rainfall_curve</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'mean'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kw</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.plot_rainfall_curve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot time series of average rainfall rate inside the model domain</p>
+<dl>
+<dt>Args:</dt><dd><p>start_date: a datetime object to give the initial datetime of rain
+method: 'mean'|'max','min','mean', method to calculate gridded</p>
+<blockquote>
+<div><p>rainfall over the model domain</p>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.plot_rainfall_map">
+<code class="sig-name descname">plot_rainfall_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">figname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'sum'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kw</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.plot_rainfall_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot rainfall map within model domain</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.save_object">
+<code class="sig-name descname">save_object</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.save_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save object as a pickle file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.set_boundary_condition">
+<code class="sig-name descname">set_boundary_condition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">boundary_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">outline_boundary</span><span class="o">=</span><span class="default_value">'fall'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.set_boundary_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>To create a Boundary object for boundary conditions</p>
+<dl>
+<dt>Args:</dt><dd><dl>
+<dt>boundary_list: (list of dicts), each dict contain keys (polyPoints,</dt><dd><p>type, h, hU) to define a IO boundary's position, type, and
+Input-Output (IO) sources timeseries. Keys including:</p>
+<dl class="simple">
+<dt>1.polyPoints is a numpy array giving X(1st col) and Y(2nd col)</dt><dd><p>coordinates of points to define the position of a boundary.
+An empty polyPoints means outline boundary.</p>
+</dd>
+<dt>2.type: 'open'(flow out flatly), 'rigid'(no outlet),</dt><dd><p>'fall'(water flow out like a fall)</p>
+</dd>
+<dt>3.h: a two-col numpy array. The 1st col is time(s). The 2nd col</dt><dd><p>is water depth(m)</p>
+</dd>
+<dt>4.hU: a two-col numpy array. The 1st col is time(s). The 2nd</dt><dd><p>col is discharge(m3/s) or a three-col numpy array, the 2nd
+col and the 3rd col are velocities(m/s) in x and y
+direction, respectively.</p>
+</dd>
+</dl>
+</dd>
+<dt>outline_boundary: (str) 'open'|'rigid', default outline boundary is</dt><dd><p>open and both h and hU are set as zero</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.set_case_folder">
+<code class="sig-name descname">set_case_folder</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_folder</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">make_dir</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.set_case_folder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize, renew, or create case and data folders</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>new_folder: (str) renew case and data folder if it is given
+make_dir: True|False create folders if it is True</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.set_device_no">
+<code class="sig-name descname">set_device_no</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device_no</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.set_device_no" title="Permalink to this definition">¶</a></dt>
+<dd><p>set device no of the model</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>device_no: int or a list of int corresponding to the number of </dt><dd><p>sections</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.set_gauges_position">
+<code class="sig-name descname">set_gauges_position</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gauges_pos</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.set_gauges_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set coordinates of monitoring gauges</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>gauges_pos: (numpy array) the 1st column is X coordinates, </dt><dd><p>2nd column is the Y coordinates</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.set_grid_parameter">
+<code class="sig-name descname">set_grid_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.set_grid_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set grid parameter with Landcover object as name=value</p>
+<dl>
+<dt>Args:</dt><dd><dl>
+<dt>kwargs: Keyword Arguments Specified by a Dictionary</dt><dd><p>keyword: name, from grid_parameter_keys</p>
+<dl class="simple">
+<dt>value:  1. scalar, a uniform parameter value</dt><dd><ol class="arabic simple" start="2">
+<li><dl class="simple">
+<dt>array, gridded parameter value with the same shape</dt><dd><p>of the DEM array</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>dict, contains param_value, land_value,  and </dt><dd><p>default_value=0</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.set_initial_condition">
+<code class="sig-name descname">set_initial_condition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">parameter_name</span></em>, <em class="sig-param"><span class="n">parameter_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.set_initial_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set initial condition for h0, hU0x, hU0y</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>parameter_name: (str) h0, hU0x, hU0y
+parameter_value: scalar or numpy array with the same size of DEM.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.set_landcover">
+<code class="sig-name descname">set_landcover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">landcover_data</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.set_landcover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set Landcover object with a Raster object or file</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>landcover_data: (string or Raster) A Raster file or its file name </dt><dd><p>of land cover data</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.set_num_of_sections">
+<code class="sig-name descname">set_num_of_sections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_of_sections</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.set_num_of_sections" title="Permalink to this definition">¶</a></dt>
+<dd><p>set the number of divided sections to run a case</p>
+<p>It can transfer single-gpu to multi-gpu or the opposite way</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>num_of_sections: (int) number of domains</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.set_rainfall">
+<code class="sig-name descname">set_rainfall</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rain_mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rain_source</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.set_rainfall" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set rainfall mask and rainfall source</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>rain_mask: str [filename of a Raster endswith .gz/asc/tif]</dt><dd><p>numpy int array with the same shape with DEM array
+a Raster object</p>
+</dd>
+<dt>rain_source: str [filename of a csv file for rainfall source data]</dt><dd><p>numpy array the 1st column is time in seconds, 2nd to
+the end columns are rainfall rates in m/s.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.set_runtime">
+<code class="sig-name descname">set_runtime</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">runtime</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.set_runtime" title="Permalink to this definition">¶</a></dt>
+<dd><p>set runtime of the model</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>runtime: a list of four values representing start, end, output </dt><dd><p>interval and backup interval respectively</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.write_boundary_conditions">
+<code class="sig-name descname">write_boundary_conditions</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.write_boundary_conditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write boundary condtion files</p>
+<dl class="simple">
+<dt>if there are multiple domains, write in the first folder</dt><dd><p>and copy to others</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.write_device_file">
+<code class="sig-name descname">write_device_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">device_no</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.write_device_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create device_setup.dat for choosing GPU number to run the model</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.write_gauges_position">
+<code class="sig-name descname">write_gauges_position</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gauges_pos</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.write_gauges_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write the gauges position file</p>
+<p>Public version for both single and multiple GPUs</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>gauge_pos: (2-coloumn numpy array) positions of gauges</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.write_grid_files">
+<code class="sig-name descname">write_grid_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_tag</span></em>, <em class="sig-param"><span class="n">is_single_gpu</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.write_grid_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write grid-based files</p>
+<p>Public version for both single and multiple GPUs</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>file_tag: the pure name of a grid-based file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.write_halo_file">
+<code class="sig-name descname">write_halo_file</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.write_halo_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write overlayed cell IDs</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.write_input_files">
+<code class="sig-name descname">write_input_files</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_tag</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.write_input_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write input files</p>
+<dl class="simple">
+<dt>To classify the input files and call functions needed to write each</dt><dd><p>input files</p>
+</dd>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>file_tag: a string or list of string giving the name(s) of input</dt><dd><p>files without suffix</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.write_mesh_file">
+<code class="sig-name descname">write_mesh_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">is_single_gpu</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.write_mesh_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write mesh file DEM.txt, compatoble for both single and multiple
+GPU model</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.write_rainfall_source">
+<code class="sig-name descname">write_rainfall_source</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.write_rainfall_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write rainfall source data</p>
+<p>rainfall mask can be written by function write_grid_files</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.InputHipims.InputHipims.write_runtime_file">
+<code class="sig-name descname">write_runtime_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_values</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipims.write_runtime_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>write times_setup.dat file</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="hipims_io.InputHipims.InputHipimsSub">
+<em class="property">class </em><code class="sig-prename descclassname">hipims_io.InputHipims.</code><code class="sig-name descname">InputHipimsSub</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dem_array</span></em>, <em class="sig-param"><span class="n">header</span></em>, <em class="sig-param"><span class="n">case_folder</span></em>, <em class="sig-param"><span class="n">num_of_sections</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.InputHipimsSub" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hipims_io.InputHipims.InputHipims" title="hipims_io.InputHipims.InputHipims"><code class="xref py py-class docutils literal notranslate"><span class="pre">hipims_io.InputHipims.InputHipims</span></code></a></p>
+<p>object for each section, child class of InputHipims</p>
+<dl>
+<dt>Attributes:</dt><dd><p>sectionNO: the serial number of each section
+_valid_cell_subs: (tuple, int) two numpy array indicating rows and cols</p>
+<blockquote>
+<div><p>of valid cells on the local grid</p>
+</div></blockquote>
+<dl class="simple">
+<dt>valid_cell_subsOnGlobal: (tuple, int) two numpy array indicating rows</dt><dd><p>and cols of valid cells on the global grid</p>
+</dd>
+</dl>
+<p>shared_cells_id: 2-row shared Cells id on a local grid
+case_folder: input folder of each section
+_outline_cell_subs: (tuple, int) two numpy array indicating rows and</p>
+<blockquote>
+<div><p>cols of valid cells on a local grid</p>
+</div></blockquote>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="hipims_io.InputHipims.InputHipimsSub.section_id">
+<code class="sig-name descname">section_id</code><em class="property"> = 0</em><a class="headerlink" href="#hipims_io.InputHipims.InputHipimsSub.section_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.InputHipims.load_input_object">
+<code class="sig-prename descclassname">hipims_io.InputHipims.</code><code class="sig-name descname">load_input_object</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.load_input_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>load object from a dictionary and return as an InputHipims object
+Args:</p>
+<blockquote>
+<div><p>filename: a string giving the object file name</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Return: </dt><dd><p>An object of InputHipims</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.InputHipims.main">
+<code class="sig-prename descclassname">hipims_io.InputHipims.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.InputHipims.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io.Landcover">
+<span id="hipims-io-landcover"></span><h2>hipims_io.Landcover<a class="headerlink" href="#module-hipims_io.Landcover" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="landcover">
+<h3>Landcover<a class="headerlink" href="#landcover" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt>To do:</dt><dd><p>To read, compute, and show Landcover types</p>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="py class">
+<dt id="hipims_io.Landcover.Landcover">
+<em class="property">class </em><code class="sig-prename descclassname">hipims_io.Landcover.</code><code class="sig-name descname">Landcover</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">ras_data</span></em>, <em class="sig-param"><span class="n">dem_ras</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Landcover.Landcover" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class to set landcover data and use it to set grid parameters</p>
+<dl class="simple">
+<dt>Attributes:</dt><dd><p>mask_header: dictionary showing mask georeference
+mask_dict: dict with two keys:'value' and 'index', providing int array showing landcover type and their index respectively</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="hipims_io.Landcover.Landcover.get_mask_array">
+<code class="sig-name descname">get_mask_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Landcover.Landcover.get_mask_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a mask array</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Landcover.Landcover.to_grid_parameter">
+<code class="sig-name descname">to_grid_parameter</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param_value</span></em>, <em class="sig-param"><span class="n">land_value</span></em>, <em class="sig-param"><span class="n">default_value</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Landcover.Landcover.to_grid_parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set grid parameter according to landcover data</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>param_value: scalar or a list of scalar
+land_ids: index representing landcover, scalar, list of scalar, or list of list</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io.OutputHipims">
+<span id="hipims-io-outputhipims"></span><h2>hipims_io.OutputHipims<a class="headerlink" href="#module-hipims_io.OutputHipims" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="outputhipims">
+<h3>OutputHipims<a class="headerlink" href="#outputhipims" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt>To do:</dt><dd><p>Process output files from HiPIMS</p>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="py class">
+<dt id="hipims_io.OutputHipims.OutputHipims">
+<em class="property">class </em><code class="sig-prename descclassname">hipims_io.OutputHipims.</code><code class="sig-name descname">OutputHipims</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">input_obj</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">case_folder</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_of_sections</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">header_file_tag</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.OutputHipims.OutputHipims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>To read and analyze otuput files from a HiPIMS flood model</p>
+<dl>
+<dt>Attributes:</dt><dd><p>case_folder: (str) the absolute path of the case folder
+input_folder: (str|list of strings) the absolute path of the</p>
+<blockquote>
+<div><p>input folder(s)</p>
+</div></blockquote>
+<dl class="simple">
+<dt>output_folder: (str|list of strings) the absolute path of the </dt><dd><p>output folder(s)</p>
+</dd>
+</dl>
+<p>number_of_sections: (int) the number of subdomains of the model
+header: (dict or list of dict) provide the header information
+header_list: a list of sub headers [only for multi-gpu model]
+ref_datetime: 
+times_simu: (dataframe) with variable 'times' (simulated time in</p>
+<blockquote>
+<div><p>seconds) and 'date_times' if ref_datetime is defined.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>gauge_values_all: (dict) 'h', 'eta', 'hU', array with values of all </dt><dd><p>gauge positions, not time column</p>
+</dd>
+</dl>
+<p>gauge_values: gauge timeseries summarized from a series of gauge points
+grid_results: a list of Raster objects for gridded results</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="hipims_io.OutputHipims.OutputHipims.add_gauge_results">
+<code class="sig-name descname">add_gauge_results</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">var_name</span></em>, <em class="sig-param"><span class="n">gauge_name</span><span class="o">=</span><span class="default_value">'All'</span></em>, <em class="sig-param"><span class="n">gauge_ind</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compressed</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.OutputHipims.OutputHipims.add_gauge_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>add simulated value to the object gauge by gauge</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>var_name: 'h', 'hU', 'eta'
+gauge_name: 'All' add all gauges, then gauge_ind not needed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.OutputHipims.OutputHipims.add_grid_results">
+<code class="sig-name descname">add_grid_results</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">result_names</span></em>, <em class="sig-param"><span class="n">compressed</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.OutputHipims.OutputHipims.add_grid_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read and return Raster object to attribute 'grid_results'</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>result_names: string or list of string, gives the name of grid file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.OutputHipims.OutputHipims.read_gauges_file">
+<code class="sig-name descname">read_gauges_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_tag</span><span class="o">=</span><span class="default_value">'h'</span></em>, <em class="sig-param"><span class="n">compressed</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.OutputHipims.OutputHipims.read_gauges_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read gauges files for time seires of values at the monitored gauges</p>
+<dl>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>file_tag: h, hU, eta, corresponding to h_gauges.dat, hU_gauges.dat,</dt><dd><p>and eta_gauges.dat, respectively</p>
+</dd>
+</dl>
+</dd>
+<dt>Return:</dt><dd><p>gauges_pos, the coordinates of gauges within the model domain</p>
+<p>times, time in seconds</p>
+<p>values, gauge values corresponding to the gauges position</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.OutputHipims.OutputHipims.read_grid_file">
+<code class="sig-name descname">read_grid_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_tag</span><span class="o">=</span><span class="default_value">'h_0'</span></em>, <em class="sig-param"><span class="n">compressed</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.OutputHipims.OutputHipims.read_grid_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read asc grid files from output</p>
+<dl class="simple">
+<dt>Return:</dt><dd><p>Raster: a raster object of the grid</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.OutputHipims.OutputHipims.save_object">
+<code class="sig-name descname">save_object</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.OutputHipims.OutputHipims.save_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the object to a pickle file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.OutputHipims.OutputHipims.set_ref_datetime">
+<code class="sig-name descname">set_ref_datetime</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">date_time</span></em>, <em class="sig-param"><span class="n">str_format</span><span class="o">=</span><span class="default_value">'%Y-%m-%d %H:%M:%S'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.OutputHipims.OutputHipims.set_ref_datetime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the refernce datetime of the simulation</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.OutputHipims.load_output_object">
+<code class="sig-prename descclassname">hipims_io.OutputHipims.</code><code class="sig-name descname">load_output_object</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.OutputHipims.load_output_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>load object from a dictionary and return as an OutputHipims object</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>filename: a string giving the object file name</p>
+</dd>
+<dt>Return: </dt><dd><p>An object of OutputHipims</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io.Rainfall">
+<span id="hipims-io-rainfall"></span><h2>hipims_io.Rainfall<a class="headerlink" href="#module-hipims_io.Rainfall" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="rainfall">
+<h3>Rainfall<a class="headerlink" href="#rainfall" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt>To do:</dt><dd><p>To read, compute, and show rainfall data</p>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="py class">
+<dt id="hipims_io.Rainfall.Rainfall">
+<em class="property">class </em><code class="sig-prename descclassname">hipims_io.Rainfall.</code><code class="sig-name descname">Rainfall</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rain_mask</span></em>, <em class="sig-param"><span class="n">rain_source</span></em>, <em class="sig-param"><span class="n">source_sep</span><span class="o">=</span><span class="default_value">','</span></em>, <em class="sig-param"><span class="n">dem_ras</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>a class to set rainfall data for hipims</p>
+<p>Attributes:</p>
+<blockquote>
+<div><p>time_s: 1-col array, time in seconds
+mask_header: dictionary showing mask georeference
+mask_dict: dict with two keys:'value' and 'index', providing int array</p>
+<blockquote>
+<div><p>showing rain source number and their index respectively</p>
+</div></blockquote>
+<p>rain_rate: numpy array m/s
+attrs: summary of the object
+subs_in: tuple of row and col number, provide subs of the mask array values</p>
+<blockquote>
+<div><p>inside the model domain. Only available when dem_ras is given</p>
+</div></blockquote>
+<p>start_date: start date and time of time zero in time_s
+time_dt: datetime format of time_s</p>
+</div></blockquote>
+<dl class="py method">
+<dt id="hipims_io.Rainfall.Rainfall.get_attrs">
+<code class="sig-name descname">get_attrs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall.get_attrs" title="Permalink to this definition">¶</a></dt>
+<dd><p>define rain_attr</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Rainfall.Rainfall.get_mask_array">
+<code class="sig-name descname">get_mask_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall.get_mask_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a mask array</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Rainfall.Rainfall.get_source_array">
+<code class="sig-name descname">get_source_array</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall.get_source_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a source array, first column is time_s, then continue with
+rain_rate in m/s</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Rainfall.Rainfall.get_spatial_map">
+<code class="sig-name descname">get_spatial_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'sum'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall.get_spatial_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get spatial rainfall map over time series</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>rain_mask_obj: asc file name or Raster object for rain mask
+cellsize: resample the rain_mask to a new grid (with larger cellsize)
+method: sum|mean caculate method for each cell, sum by time or mean by time</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Rainfall.Rainfall.get_time_series">
+<code class="sig-name descname">get_time_series</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'mean'</span></em>, <em class="sig-param"><span class="n">rain_rate_valid</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall.get_time_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot time series of average rainfall rate inside the model domain</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>method: 'mean'|'max','min','mean'method to calculate gridded rainfall </dt><dd><p>over the model domain</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Rainfall.Rainfall.get_valid_rain_rate">
+<code class="sig-name descname">get_valid_rain_rate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">unique</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall.get_valid_rain_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a rain rate array over valid cells</p>
+<p>row is time axis, col is source id axis</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Rainfall.Rainfall.plot_rainfall_map">
+<code class="sig-name descname">plot_rainfall_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'sum'</span></em>, <em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">'YlGnBu'</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kw</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall.plot_rainfall_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot rainfall map within model domain   
+method: the way to calculate time series rainfall rate</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Rainfall.Rainfall.plot_time_series">
+<code class="sig-name descname">plot_time_series</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'mean'</span></em>, <em class="sig-param"><span class="n">dt_interval</span><span class="o">=</span><span class="default_value">24</span></em>, <em class="sig-param"><span class="n">dt_format</span><span class="o">=</span><span class="default_value">'%m-%d'</span></em>, <em class="sig-param"><span class="n">title_str</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall.plot_time_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot time series of average rainfall rate inside the model domain      
+method: 'mean'|'max','min','mean'method to calculate gridded rainfall   
+over the model domain</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Rainfall.Rainfall.set_mask">
+<code class="sig-name descname">set_mask</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rain_mask</span></em>, <em class="sig-param"><span class="n">dem_ras</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall.set_mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set rainfall mask from a scalar or a grid (object/file)</p>
+<p>if rain_mask is a scalar or array, dem_ras must be provided</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Rainfall.Rainfall.set_source">
+<code class="sig-name descname">set_source</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rain_source</span></em>, <em class="sig-param"><span class="n">delimiter</span><span class="o">=</span><span class="default_value">','</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall.set_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set rainfall mask from a numpy array or a csv file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Rainfall.Rainfall.set_start_date">
+<code class="sig-name descname">set_start_date</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">datetime_str</span></em>, <em class="sig-param"><span class="n">fmt</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Rainfall.Rainfall.set_start_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set start date for the time series</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io.Raster">
+<span id="hipims-io-raster"></span><h2>hipims_io.Raster<a class="headerlink" href="#module-hipims_io.Raster" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="raster">
+<h3>Raster<a class="headerlink" href="#raster" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt>To do:</dt><dd><p>Read, write and analyze gridded Raster data</p>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="py class">
+<dt id="hipims_io.Raster.Raster">
+<em class="property">class </em><code class="sig-prename descclassname">hipims_io.Raster.</code><code class="sig-name descname">Raster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">array</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">header</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">xllcorner</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">yllcorner</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">cellsize</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">NODATA_value</span><span class="o">=</span><span class="default_value">- 9999</span></em>, <em class="sig-param"><span class="n">epsg</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">projection</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_header_rows</span><span class="o">=</span><span class="default_value">6</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>To deal with raster data with a ESRI ASCII or GTiff format</p>
+<dl>
+<dt>Attributes:</dt><dd><p>source_file: file name to read grid data 
+output_file: file name to write a raster object 
+array: a numpy array storing grid cell values 
+header: a dict storing reference information of the grid, with keys:</p>
+<blockquote>
+<div><p>nrows, ncols, xllcorner, yllcorner, cellsize, NODATA_value</p>
+</div></blockquote>
+<dl class="simple">
+<dt>extent: a tuple storing outline limits of the raster (left, right, </dt><dd><p>bottom, top)</p>
+</dd>
+</dl>
+<p>shape: shape of the Raster value array
+cellsize: the length of each square cell
+extent_dict: a dictionary storing outline limits of the raster  
+projection: (string) the Well-Known_Text (wkt) projection information</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.assign_to">
+<code class="sig-name descname">assign_to</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_header</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.assign_to" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign_to the object to a new grid defined by new_header</p>
+<p>If cellsize are not equal, the origin Raster will be firstly 
+resampled to the target grid.</p>
+<dl class="simple">
+<dt>Return:</dt><dd><p>Raster: A newly defined grid</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.clip">
+<code class="sig-name descname">clip</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">clip_mask</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.clip" title="Permalink to this definition">¶</a></dt>
+<dd><p>clip raster according to a mask</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>mask: 1. string name of a shapefile or 2. 2-col numpy array giving</dt><dd><p>X and Y coords in each column to shape the mask polygon</p>
+</dd>
+</dl>
+</dd>
+<dt>Return:</dt><dd><p>Raster: a new raster object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.grid_interpolate">
+<code class="sig-name descname">grid_interpolate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value_grid</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'nearest'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.grid_interpolate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolate values of a grid to all cells on the Raster object</p>
+<p>2D interpolate</p>
+<dl>
+<dt>Args:</dt><dd><p>value_grid: a grid file string or Raster object 
+method: {'linear', 'nearest', 'cubic'}, optional</p>
+<blockquote>
+<div><p>Method of interpolation.</p>
+</div></blockquote>
+</dd>
+<dt>Return: </dt><dd><dl class="simple">
+<dt>numpy array: the interpolated grid with the same size of the self </dt><dd><p>object</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.grid_resample_nearest">
+<code class="sig-name descname">grid_resample_nearest</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">newsize</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.grid_resample_nearest" title="Permalink to this definition">¶</a></dt>
+<dd><p>resample a grid to a new grid resolution via nearest interpolation</p>
+<p>Alias: GridResample</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.hillshade">
+<code class="sig-name descname">hillshade</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.hillshade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a hillshade map</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.mapshow">
+<code class="sig-name descname">mapshow</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.mapshow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display raster data without projection</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>figname: the file name to export map
+figsize: the size of map
+dpi: The resolution in dots per inch
+vmin and vmax define the data range that the colormap covers
+cax_str: string as the title of the colorbar
+relocate: relocate the origin of the grid coordinates to (0, 0)
+scale_ratio: 1|1000, axis unit 1 m or 1000 meter</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.point_interpolate">
+<code class="sig-name descname">point_interpolate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">points</span></em>, <em class="sig-param"><span class="n">values</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'nearest'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.point_interpolate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolate values of 2D points to all cells on the Raster object</p>
+<p>2D interpolate</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>points: ndarray of floats, shape (n, 2)</dt><dd><p>Data point coordinates. Can either be an array of shape (n, 2), 
+or a tuple of ndim arrays.</p>
+</dd>
+<dt>values: ndarray of float or complex, shape (n, )</dt><dd><p>Data values.</p>
+</dd>
+<dt>method: {'linear', 'nearest', 'cubic'}, optional</dt><dd><p>Method of interpolation.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.rankshow">
+<code class="sig-name descname">rankshow</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.rankshow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display water depth map in a range defined by (d_min, d_max)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.rasterize">
+<code class="sig-name descname">rasterize</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shp_filename</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.rasterize" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>rasterize the shapefile to the raster object and return a bool array</dt><dd><p>with Ture value in and on the polygon/polyline</p>
+</dd>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>shp_filename: string for shapefile name, or a list of shapefile</dt><dd><p>geometry with attributes 'type' and 'coordinates'</p>
+</dd>
+</dl>
+</dd>
+<dt>Return:</dt><dd><p>index_array: an array of True|False values masking the shapefile</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.rect_clip">
+<code class="sig-name descname">rect_clip</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">clip_extent</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.rect_clip" title="Permalink to this definition">¶</a></dt>
+<dd><p>clip raster according to a rectangle extent</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>clip_extent: list of [left, right, bottom, top]</p>
+</dd>
+<dt>Return:</dt><dd><p>Raster: a new raster object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.reproject">
+<code class="sig-name descname">reproject</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dst_epsg</span></em>, <em class="sig-param"><span class="n">output_file</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.reproject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reproject the raster to a different coordinate referenece system</p>
+<dl>
+<dt>Args:</dt><dd><p>output_file: a string to give output file name
+src_epsg: int scalar to give EPSG code of the coordinate reference</p>
+<blockquote>
+<div><p>system of the original dataset, default is 27700 for BNG</p>
+</div></blockquote>
+</dd>
+<dt>Return:</dt><dd><p>dst_rio: destination rasterio dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.resample">
+<code class="sig-name descname">resample</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">new_cellsize</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'bilinear'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resample the raster object to a new resolution</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>new_cellsize: scalar, the resoltion of the new raster object
+method: string, one of the values including 'nearest', 'bilinear',
+'cubic', 'cubic_spline', 'lanczos', 'average', 'mode', 'gauss',
+'max', 'min', 'med', 'q1', 'q3'</p>
+</dd>
+<dt>Return:</dt><dd><p>Raster object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.to_osgeo_raster">
+<code class="sig-name descname">to_osgeo_raster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fileformat</span><span class="o">=</span><span class="default_value">'GTiff'</span></em>, <em class="sig-param"><span class="n">srcEPSG</span><span class="o">=</span><span class="default_value">27700</span></em>, <em class="sig-param"><span class="n">destEPSG</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.to_osgeo_raster" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert this object to an osgeo raster object, write a tif file if 
+necessary</p>
+<dl>
+<dt>Args:</dt><dd><p>filename: the output file name
+fileformat: GTiff or AAIGrid
+destEPSG: the EPSG projection code default: 27700 British National</p>
+<blockquote>
+<div><p>Grid 'EPSG:4326'</p>
+</div></blockquote>
+</dd>
+<dt>Returns:</dt><dd><dl class="simple">
+<dt>osgeo raster: The converted raster dataset, or a tif filename if </dt><dd><p>it is written</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p>Alias: To_osgeo_raster</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.to_points">
+<code class="sig-name descname">to_points</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.to_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get X and Y coordinates of all raster cells</p>
+<dl class="simple">
+<dt>Return:</dt><dd><p>numpy array:  coordinates of the raster object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.to_rasterio">
+<code class="sig-name descname">to_rasterio</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">src_epsg</span><span class="o">=</span><span class="default_value">27700</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.to_rasterio" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert to a rasterio dataset</p>
+<dl>
+<dt>Args:</dt><dd><p>output_file: a string to give output file name
+src_epsg: int scalar to give EPSG code of the coordinate reference</p>
+<blockquote>
+<div><p>system of the original dataset, default is 27700 for BNG</p>
+</div></blockquote>
+</dd>
+<dt>Return:</dt><dd><p>ds_rio: a rasterio dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.vectorshow">
+<code class="sig-name descname">vectorshow</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj_y</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.vectorshow" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot velocity map of U and V, whose values stored in two raster
+objects seperately</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Raster.Raster.write_asc">
+<code class="sig-name descname">write_asc</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_file</span></em>, <em class="sig-param"><span class="n">EPSG</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.Raster.write_asc" title="Permalink to this definition">¶</a></dt>
+<dd><p>write raster as asc format file</p>
+<p>Alias: Write_asc</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>output_file: output file name
+EPSG: epsg code, if it is given, a .prj file will be written
+compression: logic, whether compress write the asc file as gz</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.Raster.main">
+<code class="sig-prename descclassname">hipims_io.Raster.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Main function</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.Raster.merge">
+<code class="sig-prename descclassname">hipims_io.Raster.</code><code class="sig-name descname">merge</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj_origin</span></em>, <em class="sig-param"><span class="n">obj_target</span></em>, <em class="sig-param"><span class="n">resample_method</span><span class="o">=</span><span class="default_value">'bilinear'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Raster.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Merge the obj_origin to obj_target</p>
+<p>assign grid values in the origin Raster to the cooresponding grid cells in
+the target object. If cellsize are not equal, the origin Raster will be
+firstly resampled to the target object.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>obj_origin: (Raster) original raster
+obj_target: (Raster) target raster</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io.Summary">
+<span id="hipims-io-summary"></span><h2>hipims_io.Summary<a class="headerlink" href="#module-hipims_io.Summary" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="summary">
+<h3>Summary<a class="headerlink" href="#summary" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt>To do:</dt><dd><p>To generate, store, write, and read summary information of a flood model</p>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="py class">
+<dt id="hipims_io.Summary.Summary">
+<em class="property">class </em><code class="sig-prename descclassname">hipims_io.Summary.</code><code class="sig-name descname">Summary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data_in</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.Summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Summary information of a flood case</p>
+<p>Attributes:</p>
+<blockquote>
+<div><p>grid_attr:
+model_attr:
+boundary_attr:
+rain_attr:
+params_attr:
+initial_attr:</p>
+</div></blockquote>
+<dl class="py attribute">
+<dt id="hipims_io.Summary.Summary.boundary_attr">
+<code class="sig-name descname">boundary_attr</code><em class="property"> = {'boundary_details': 'outline', 'num_boundary': 1}</em><a class="headerlink" href="#hipims_io.Summary.Summary.boundary_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Summary.Summary.display">
+<code class="sig-name descname">display</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.Summary.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>display summary information</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="hipims_io.Summary.Summary.grid_attr">
+<code class="sig-name descname">grid_attr</code><em class="property"> = {'area': 0, 'cellsize': 1, 'extent_dict': {'bottom': 0, 'left': 0, 'right': 0, 'top': 0}, 'num_cells': 0, 'shape': (1, 1)}</em><a class="headerlink" href="#hipims_io.Summary.Summary.grid_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="hipims_io.Summary.Summary.initial_attr">
+<code class="sig-name descname">initial_attr</code><em class="property"> = {'h0': 0, 'hU0x': 0, 'hU0y': 0}</em><a class="headerlink" href="#hipims_io.Summary.Summary.initial_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="hipims_io.Summary.Summary.model_attr">
+<code class="sig-name descname">model_attr</code><em class="property"> = {'birthday': None, 'case_folder': None, 'num_GPU': 1, 'num_gauges': 0, 'run_time': (0, 3600, 600, 3600)}</em><a class="headerlink" href="#hipims_io.Summary.Summary.model_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="hipims_io.Summary.Summary.params_attr">
+<code class="sig-name descname">params_attr</code><em class="property"> = {'capillary_head': 0, 'cumulative_depth': 0, 'hydraulic_conductivity': 0, 'manning': 0, 'sewer_sink': 0, 'water_content_diff': 0}</em><a class="headerlink" href="#hipims_io.Summary.Summary.params_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="hipims_io.Summary.Summary.rain_attr">
+<code class="sig-name descname">rain_attr</code><em class="property"> = {'average': 0, 'max': 0, 'num_source': 0, 'spatial_res': 1000, 'sum': 0, 'temporal_res': 0}</em><a class="headerlink" href="#hipims_io.Summary.Summary.rain_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Summary.Summary.set_boundary_attr">
+<code class="sig-name descname">set_boundary_attr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj_boundary</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.Summary.set_boundary_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Summary.Summary.set_grid_attr">
+<code class="sig-name descname">set_grid_attr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dem_array</span></em>, <em class="sig-param"><span class="n">dem_header</span></em>, <em class="sig-param"><span class="n">extent_dict</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.Summary.set_grid_attr" title="Permalink to this definition">¶</a></dt>
+<dd><p>assign grid_attr</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Summary.Summary.set_initial_attr">
+<code class="sig-name descname">set_initial_attr</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kw</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.Summary.set_initial_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Summary.Summary.set_model_attr">
+<code class="sig-name descname">set_model_attr</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kw</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.Summary.set_model_attr" title="Permalink to this definition">¶</a></dt>
+<dd><p>assign case_folder, num_GPU, run_time, gauge_pos</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Summary.Summary.set_params_attr">
+<code class="sig-name descname">set_params_attr</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kw</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.Summary.set_params_attr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Summary.Summary.set_rain_attr">
+<code class="sig-name descname">set_rain_attr</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rain_source</span></em>, <em class="sig-param"><span class="n">rain_mask</span></em>, <em class="sig-param"><span class="n">cellsize</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.Summary.set_rain_attr" title="Permalink to this definition">¶</a></dt>
+<dd><p>define rain_attr</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Summary.Summary.to_dict">
+<code class="sig-name descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.Summary.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the object to a dictionary</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Summary.Summary.to_json">
+<code class="sig-name descname">to_json</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.Summary.to_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write to json file</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="hipims_io.Summary.Summary.write_readme">
+<code class="sig-name descname">write_readme</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">filename</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.Summary.write_readme" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.Summary.load_summary">
+<code class="sig-prename descclassname">hipims_io.Summary.</code><code class="sig-name descname">load_summary</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.load_summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a json text file as a dict of Summary</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.Summary.main">
+<code class="sig-prename descclassname">hipims_io.Summary.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.Summary.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io.demo_functions">
+<span id="hipims-io-demo-functions"></span><h2>hipims_io.demo_functions<a class="headerlink" href="#module-hipims_io.demo_functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="demo-functions">
+<h3>Demo functions<a class="headerlink" href="#demo-functions" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt>To do:</dt><dd><ul class="simple">
+<li><p>Create the demo</p></li>
+</ul>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="py function">
+<dt id="hipims_io.demo_functions.demo_input">
+<code class="sig-prename descclassname">hipims_io.demo_functions.</code><code class="sig-name descname">demo_input</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num_of_sections</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">set_example_inputs</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">figname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dpi</span><span class="o">=</span><span class="default_value">200</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.demo_functions.demo_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>A demonstration to generate a hipims input object</p>
+<dl>
+<dt>Args:</dt><dd><dl class="simple">
+<dt>set_example_inputs: (True|False) if True, initial condition, boundary </dt><dd><p>condition, rainfall source, and gauge postion will be set to the 
+input object according to sample data.</p>
+</dd>
+</dl>
+<p>figname: (string) if given, a domain map will saved</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.demo_functions.demo_output">
+<code class="sig-prename descclassname">hipims_io.demo_functions.</code><code class="sig-name descname">demo_output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">case_folder</span></em>, <em class="sig-param"><span class="n">num_of_sections</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.demo_functions.demo_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>A demonstration to generate a hipims output object</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>case_folder: (string) path to case folder
+num_of_sections: (int) number of domains</p>
+</dd>
+<dt>Note:</dt><dd><p>a input folder and files must be created before using this function</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.demo_functions.demo_raster">
+<code class="sig-prename descclassname">hipims_io.demo_functions.</code><code class="sig-name descname">demo_raster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">figname</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.demo_functions.demo_raster" title="Permalink to this definition">¶</a></dt>
+<dd><p>A demonstration to read and show raster files</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>figname: (string) the file name to save the figure</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.demo_functions.get_sample_data">
+<code class="sig-prename descclassname">hipims_io.demo_functions.</code><code class="sig-name descname">get_sample_data</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.demo_functions.get_sample_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get sample data for demonstartion</p>
+<dl class="simple">
+<dt>Returns:</dt><dd><p>A DEM raster object and a dictionary with boundary_condition,
+rain_source, and gauges_pos data</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io.grid_show">
+<span id="hipims-io-grid-show"></span><h2>hipims_io.grid_show<a class="headerlink" href="#module-hipims_io.grid_show" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="grid-show">
+<h3>grid_show<a class="headerlink" href="#grid-show" title="Permalink to this headline">¶</a></h3>
+<p>To do:</p>
+<blockquote>
+<div><p>To visulize grid data, e.g. raster objec(s)</p>
+</div></blockquote>
+<hr class="docutils" />
+<dl class="py function">
+<dt id="hipims_io.grid_show.hillshade">
+<code class="sig-prename descclassname">hipims_io.grid_show.</code><code class="sig-name descname">hillshade</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">raster_obj</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">azdeg</span><span class="o">=</span><span class="default_value">315</span></em>, <em class="sig-param"><span class="n">altdeg</span><span class="o">=</span><span class="default_value">45</span></em>, <em class="sig-param"><span class="n">vert_exag</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">cmap</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">blend_mode</span><span class="o">=</span><span class="default_value">'overlay'</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">relocate</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">scale_ratio</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.grid_show.hillshade" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a hillshade map</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.grid_show.main">
+<code class="sig-prename descclassname">hipims_io.grid_show.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.grid_show.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.grid_show.make_gif">
+<code class="sig-prename descclassname">hipims_io.grid_show.</code><code class="sig-name descname">make_gif</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_file</span></em>, <em class="sig-param"><span class="n">obj_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">header</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">array_3d</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_str</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">breaks</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fig_names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">duration</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="n">delete</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.grid_show.make_gif" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create animation of gridded data</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>mask_header: (dict) header file provide georeference of rainfall mask
+start_date: a datetime object to give the initial date and time of rain
+duration: duration for each frame (seconds)
+cellsize: sclar (meter) the size of rainfall grid cells</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.grid_show.make_mp4">
+<code class="sig-prename descclassname">hipims_io.grid_show.</code><code class="sig-name descname">make_mp4</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_file</span></em>, <em class="sig-param"><span class="n">obj_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">header</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">array_3d</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">time_str</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">breaks</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">fig_names</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">delete</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">fps</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.grid_show.make_mp4" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a video file based on a series of grids</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>obj_list: a list of Raster objects
+header: a header dict providing georeference the grid [not necessary if obj_list was given]
+array_3d: a 3D numpy array storing grid values for each timestep (in 1st dimension), [not necessary if obj_list was given]
+time_str: a list of string to show time information for each frame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.grid_show.mapshow">
+<code class="sig-prename descclassname">hipims_io.grid_show.</code><code class="sig-name descname">mapshow</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">raster_obj</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">array</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">header</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dpi</span><span class="o">=</span><span class="default_value">300</span></em>, <em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cax</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">cax_str</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">relocate</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">scale_ratio</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.grid_show.mapshow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display raster data without projection</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>raster_obj: a Raster object
+array, header: to make Raster object if raster_obj is not given
+figname: the file name to export map, if figname is empty, then the figure will not be saved
+figsize: the size of map
+dpi: The resolution in dots per inch
+vmin and vmax define the data range that the colormap covers
+<a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs: keywords argument of function imshow</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.grid_show.plot_shape_file">
+<code class="sig-prename descclassname">hipims_io.grid_show.</code><code class="sig-name descname">plot_shape_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shp_file</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">ax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">color</span><span class="o">=</span><span class="default_value">'r'</span></em>, <em class="sig-param"><span class="n">linewidth</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kw</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.grid_show.plot_shape_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot a shape file to a map axis</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.grid_show.rankshow">
+<code class="sig-prename descclassname">hipims_io.grid_show.</code><code class="sig-name descname">rankshow</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">raster_obj</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">array</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">header</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dpi</span><span class="o">=</span><span class="default_value">200</span></em>, <em class="sig-param"><span class="n">ax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">color</span><span class="o">=</span><span class="default_value">'Blues'</span></em>, <em class="sig-param"><span class="n">breaks</span><span class="o">=</span><span class="default_value">[0.2, 0.3, 0.5, 1, 2]</span></em>, <em class="sig-param"><span class="n">colorbar_kw</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">legend_kw</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">relocate</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">scale_ratio</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">alpha</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.grid_show.rankshow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display water depth map in ranks defined by breaks</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>breaks: list of values to define rank. Array values lower than the first break value are set as nodata.
+color: color series of the ranks
+colorbar_kw: dict, keyword arguments to set colorbar
+legend_kw: dict, keyword arguments to set legend</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.grid_show.vectorshow">
+<code class="sig-prename descclassname">hipims_io.grid_show.</code><code class="sig-name descname">vectorshow</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj_x</span></em>, <em class="sig-param"><span class="n">obj_y</span></em>, <em class="sig-param"><span class="n">figname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dpi</span><span class="o">=</span><span class="default_value">300</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.grid_show.vectorshow" title="Permalink to this definition">¶</a></dt>
+<dd><p>plot velocity map of U and V, whose values stored in two raster objects seperately</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io.indep_functions">
+<span id="hipims-io-indep-functions"></span><h2>hipims_io.indep_functions<a class="headerlink" href="#module-hipims_io.indep_functions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="independent-functions">
+<h3>Independent functions<a class="headerlink" href="#independent-functions" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt>To do:</dt><dd><p>non-object-based independent functions to support hipims IO</p>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="py function">
+<dt id="hipims_io.indep_functions.clean_output">
+<code class="sig-prename descclassname">hipims_io.indep_functions.</code><code class="sig-name descname">clean_output</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">case_folder</span></em>, <em class="sig-param"><span class="n">num_of_sections</span></em>, <em class="sig-param"><span class="n">file_tag</span><span class="o">=</span><span class="default_value">'*'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.indep_functions.clean_output" title="Permalink to this definition">¶</a></dt>
+<dd><p>delete contents in output folder(s)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.indep_functions.load_object">
+<code class="sig-prename descclassname">hipims_io.indep_functions.</code><code class="sig-name descname">load_object</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.indep_functions.load_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a pickle file as an InputHipims/OutputHipims object</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.indep_functions.save_as_dict">
+<code class="sig-prename descclassname">hipims_io.indep_functions.</code><code class="sig-name descname">save_as_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">file_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.indep_functions.save_as_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save all attributes of an input/output object to a pickle</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.indep_functions.save_object">
+<code class="sig-prename descclassname">hipims_io.indep_functions.</code><code class="sig-name descname">save_object</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">obj</span></em>, <em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.indep_functions.save_object" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save an InputHipims/OutputHipims object to a pickle file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.indep_functions.write_device_setup">
+<code class="sig-prename descclassname">hipims_io.indep_functions.</code><code class="sig-name descname">write_device_setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">case_folder</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_of_sections</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">device_values</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.indep_functions.write_device_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a device_setup.dat file. The file contains numbers representing the GPU number for each section</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>case_folder: string, the path of model
+num_of_sections: int, the number of GPUs to use
+device_values: array or list of int, representing the GPU number</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.indep_functions.write_rain_source">
+<code class="sig-prename descclassname">hipims_io.indep_functions.</code><code class="sig-name descname">write_rain_source</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rain_source</span></em>, <em class="sig-param"><span class="n">case_folder</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_of_sections</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.indep_functions.write_rain_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write rainfall sources [Independent function from hipims class]</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>rain_source: numpy array, The 1st column is time in seconds, the 2nd towards the end columns are rainfall rate in m/s for each source ID in rainfall mask array if for multiple GPU, then copy the rain source file to all domain folders
+case_folder: string, the path of model</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.indep_functions.write_times_setup">
+<code class="sig-prename descclassname">hipims_io.indep_functions.</code><code class="sig-name descname">write_times_setup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">case_folder</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">num_of_sections</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">time_values</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.indep_functions.write_times_setup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a times_setup.dat file. The file contains numbers representing the start time, end time, output interval, and backup interval in seconds</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>time_values: array or list of int/float, representing time in seconds, default values are [0, 3600, 1800, 3600]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io.rainfall_processing">
+<span id="hipims-io-rainfall-processing"></span><h2>hipims_io.rainfall_processing<a class="headerlink" href="#module-hipims_io.rainfall_processing" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="rainfall-processing">
+<h3>rainfall_processing<a class="headerlink" href="#rainfall-processing" title="Permalink to this headline">¶</a></h3>
+<dl class="simple">
+<dt>To do:</dt><dd><p>Processing rainfall</p>
+</dd>
+</dl>
+<p>Explaination of general parameters</p>
+<blockquote>
+<div><dl class="simple">
+<dt>rain_source: (numpy array) rainfall source array</dt><dd><p>The 1st column is usually time series in seconds, from the 2nd column towards end columns are rainfall rate in m/s</p>
+</dd>
+</dl>
+<p>rain_mask: (numpy array) provide sequnce number of each gridded rainfall source</p>
+<p>start_date: a datetime object to give the initial date and time of rain</p>
+</div></blockquote>
+<hr class="docutils" />
+<dl class="py function">
+<dt id="hipims_io.rainfall_processing.create_animation">
+<code class="sig-prename descclassname">hipims_io.rainfall_processing.</code><code class="sig-name descname">create_animation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_file</span></em>, <em class="sig-param"><span class="n">rain_source</span></em>, <em class="sig-param"><span class="n">mask_file</span></em>, <em class="sig-param"><span class="n">duration</span><span class="o">=</span><span class="default_value">0.5</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.rainfall_processing.create_animation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create animation of gridded rainfall rate</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>mask_header: (dict) header file provide georeference of rainfall mask
+start_date: a datetime object to give the initial date and time of rain
+duration: duration for each frame (seconds)
+cellsize: sclar (meter) the size of rainfall grid cells</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.rainfall_processing.create_mp4">
+<code class="sig-prename descclassname">hipims_io.rainfall_processing.</code><code class="sig-name descname">create_mp4</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">output_file</span></em>, <em class="sig-param"><span class="n">rain_source</span></em>, <em class="sig-param"><span class="n">mask_file</span></em>, <em class="sig-param"><span class="n">fps</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.rainfall_processing.create_mp4" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.rainfall_processing.create_pictures">
+<code class="sig-prename descclassname">hipims_io.rainfall_processing.</code><code class="sig-name descname">create_pictures</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rain_source</span></em>, <em class="sig-param"><span class="n">mask_file</span></em>, <em class="sig-param"><span class="n">cellsize</span><span class="o">=</span><span class="default_value">1000</span></em>, <em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dpi</span><span class="o">=</span><span class="default_value">100</span></em>, <em class="sig-param"><span class="n">shp_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.rainfall_processing.create_pictures" title="Permalink to this definition">¶</a></dt>
+<dd><p>create rainfall rate images</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>rain_source: a numpy array of rainfall time series, 1st column is time in seconds, other columns are rainfall intensity in m/s
+mask_file: a arc grid or a Raster object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.rainfall_processing.get_spatial_map">
+<code class="sig-prename descclassname">hipims_io.rainfall_processing.</code><code class="sig-name descname">get_spatial_map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rain_source</span></em>, <em class="sig-param"><span class="n">rain_mask_obj</span></em>, <em class="sig-param"><span class="n">figname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'sum'</span></em>, <em class="sig-param"><span class="n">cellsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">shp_file</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dpi</span><span class="o">=</span><span class="default_value">200</span></em>, <em class="sig-param"><span class="n">title</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.rainfall_processing.get_spatial_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get spatial rainfall map</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>rain_mask_obj: asc file name or Raster object for rain mask
+cellsize: resample the rain_mask to a new grid (with larger cellsize)
+method: sum|mean caculate method for each cell, sum by time or mean by time</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.rainfall_processing.get_time_series">
+<code class="sig-prename descclassname">hipims_io.rainfall_processing.</code><code class="sig-name descname">get_time_series</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rain_source</span></em>, <em class="sig-param"><span class="n">rain_mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'mean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.rainfall_processing.get_time_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot time series of average rainfall rate inside the model domain</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>method: 'mean'|'max','min','mean'method to calculate gridded rainfall over the model domain</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.rainfall_processing.plot_time_series">
+<code class="sig-prename descclassname">hipims_io.rainfall_processing.</code><code class="sig-name descname">plot_time_series</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">plot_data</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rain_source</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">rain_mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">method</span><span class="o">=</span><span class="default_value">'mean'</span></em>, <em class="sig-param"><span class="n">start_date</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">datetime_interval</span><span class="o">=</span><span class="default_value">24</span></em>, <em class="sig-param"><span class="n">datetime_format</span><span class="o">=</span><span class="default_value">'%m-%d'</span></em>, <em class="sig-param"><span class="n">title_str</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.rainfall_processing.plot_time_series" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plot time series of average rainfall rate inside the model domain</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>method: 'mean'|'max','min','mean'method to calculate gridded rainfall over the model domain</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io.spatial_analysis">
+<span id="hipims-io-spatial-analysis"></span><h2>hipims_io.spatial_analysis<a class="headerlink" href="#module-hipims_io.spatial_analysis" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="spatial-analysis">
+<h3>spatial_analysis<a class="headerlink" href="#spatial-analysis" title="Permalink to this headline">¶</a></h3>
+<p>functions to analyse data in raster and/or feature datasets to replace ArcGridDataProcessing</p>
+<dl class="simple">
+<dt>Assumptions:</dt><dd><ul class="simple">
+<li><p>map unit is meter</p></li>
+<li><p>its cellsize is the same in both x and y direction</p></li>
+<li><p>its reference position is on the lower left corner of the southwest cell</p></li>
+</ul>
+</dd>
+<dt>To do:</dt><dd><ul class="simple">
+<li><p>read and write arc</p></li>
+</ul>
+</dd>
+</dl>
+<hr class="docutils" />
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.arc_header_read">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">arc_header_read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">header_rows</span><span class="o">=</span><span class="default_value">6</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.arc_header_read" title="Permalink to this definition">¶</a></dt>
+<dd><p>read the header of a asc file as a dictionary</p>
+<dl>
+<dt>Args: </dt><dd><p>file_name: (string) file name
+header_rows: (int) number of header rows</p>
+</dd>
+<dt>Return:</dt><dd><p>dict: header: a dictionary with keys:</p>
+<blockquote>
+<div><p>ncols: (int) number of columns</p>
+<p>nrows: (int) number of rows</p>
+<p>xllcorner: (int/float) x-coordinate of the lower left corner of the lower left cell of the grid</p>
+<p>yllcorner: (int/float) y-coordinate of the lower left corner of the bottom left cell of the grid</p>
+<p>cellsize: (int/float) the length of one square cell</p>
+<p>NODATA_value: (int/float)|-9999 the value representing nodata cell</p>
+</div></blockquote>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.arcgridread">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">arcgridread</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">header_rows</span><span class="o">=</span><span class="default_value">6</span></em>, <em class="sig-param"><span class="n">return_nan</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.arcgridread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read ArcGrid format raster file</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>file_name: (str) the file name to read data
+header_rows: (int) the number of head rows of the asc file</p>
+</dd>
+<dt>Return:</dt><dd><p>numpy array: the data content
+dict: head of the raster to provide reference information of the grid
+tuple: outline extent of the grid (left, right, bottom, top)</p>
+</dd>
+<dt>Note: </dt><dd><p>this function can also read compressed gz files</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.arcgridwrite">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">arcgridwrite</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">array</span></em>, <em class="sig-param"><span class="n">header</span></em>, <em class="sig-param"><span class="n">compression</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.arcgridwrite" title="Permalink to this definition">¶</a></dt>
+<dd><p>write gird data into a ascii file</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>file_name: (str) the file name to write grid data. A compressed file will automatically add a suffix '.gz'
+array: (int/float numpy array)
+header: (dict) to provide reference information of the grid
+compression: (logic) to inidcate whether compress the ascii file</p>
+</dd>
+</dl>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gird</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">5</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">,:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">9999</span>
+<span class="n">grid</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,:]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">9999</span>
+<span class="n">header</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;ncols&#39;</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;nrows&#39;</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;xllcorner&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;yllcorner&#39;</span><span class="p">:</span><span class="mi">0</span><span class="p">,</span>
+          <span class="s1">&#39;cellsize&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;NODATA_value&#39;</span><span class="p">:</span><span class="o">-</span><span class="mi">9999</span><span class="p">}</span>
+<span class="n">file_name</span> <span class="o">=</span> <span class="s1">&#39;example_file.asc&#39;</span>
+<span class="n">arcgridwrite</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">arcgridwrite</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">header</span><span class="p">,</span> <span class="n">compression</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.byte_file_read">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">byte_file_read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.byte_file_read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read file from a bytes object</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.check_file_existence">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">check_file_existence</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.check_file_existence" title="Permalink to this definition">¶</a></dt>
+<dd><p>check whether a file exists</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.combine_raster">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">combine_raster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">asc_files</span></em>, <em class="sig-param"><span class="n">num_header_rows</span><span class="o">=</span><span class="default_value">6</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.combine_raster" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combine a list of asc files to a DEM Raster</p>
+<dl class="simple">
+<dt>Args:   </dt><dd><p>asc_files: a list of asc file names. All raster files have the same cellsize.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.compare_extent">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">compare_extent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">extent0</span></em>, <em class="sig-param"><span class="n">extent1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.compare_extent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compare and show the difference between two Raster extents</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>extent0, extent1: objects or extent dicts to be compared
+displaye: whether to show the extent in figures</p>
+</dd>
+<dt>Return:</dt><dd><p>int: 0 extent0&gt;=extent1; 1 extent0&lt;extent1; 2 extent0 and extent1 have intersections</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.extent2shape_points">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">extent2shape_points</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">extent</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.extent2shape_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert extent to a two-col numpy array of shape points</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.header2extent">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">header2extent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">header</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.header2extent" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert a header dict to a 4-element tuple (left, right, bottom, top) all four elements shows the coordinates at the edge of a cell, not center</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.hillshade_show">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">hillshade_show</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">array</span></em>, <em class="sig-param"><span class="n">header</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">azdeg</span><span class="o">=</span><span class="default_value">315</span></em>, <em class="sig-param"><span class="n">altdeg</span><span class="o">=</span><span class="default_value">45</span></em>, <em class="sig-param"><span class="n">vert_exag</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.hillshade_show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw a hillshade map</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.main">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.map2sub">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">map2sub</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">X</span></em>, <em class="sig-param"><span class="n">Y</span></em>, <em class="sig-param"><span class="n">header</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.map2sub" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert map coordinates to subscripts of an array</p>
+<blockquote>
+<div><p>array is defined by a geo-reference header</p>
+</div></blockquote>
+<dl class="simple">
+<dt>Args: </dt><dd><p>X: a scalar or numpy array of coordinate values
+Y: a scalar or numpy array of coordinate values</p>
+</dd>
+<dt>Return: </dt><dd><p>numpy array: rows and cols in the array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.map_show">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">map_show</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">array</span></em>, <em class="sig-param"><span class="n">header</span></em>, <em class="sig-param"><span class="n">figname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dpi</span><span class="o">=</span><span class="default_value">300</span></em>, <em class="sig-param"><span class="n">vmin</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">vmax</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">cax</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">relocate</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">scale_ratio</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.map_show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display raster data</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>figname: the file name to export map, if figname is empty, then the figure will not be saved
+figsize: the size of map
+dpi: The resolution in dots per inch
+vmin and vmax: the data range that the colormap covers</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.rank_show">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">rank_show</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">array</span></em>, <em class="sig-param"><span class="n">header</span></em>, <em class="sig-param"><span class="n">figname</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">figsize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">dpi</span><span class="o">=</span><span class="default_value">300</span></em>, <em class="sig-param"><span class="n">breaks</span><span class="o">=</span><span class="default_value">[0.2, 0.3, 0.5, 1, 2]</span></em>, <em class="sig-param"><span class="n">show_colorbar</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">show_colorlegend</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">relocate</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">scale_ratio</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.rank_show" title="Permalink to this definition">¶</a></dt>
+<dd><p>Categorize array data as ranks according to the breaks and display a ranked map</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.shape_extent_to_header">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">shape_extent_to_header</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">shape</span></em>, <em class="sig-param"><span class="n">extent</span></em>, <em class="sig-param"><span class="n">nan_value</span><span class="o">=</span><span class="default_value">- 9999</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.shape_extent_to_header" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a header dict with shape and extent of an array</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.sub2map">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">sub2map</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rows</span></em>, <em class="sig-param"><span class="n">cols</span></em>, <em class="sig-param"><span class="n">header</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.sub2map" title="Permalink to this definition">¶</a></dt>
+<dd><p>convert subscripts of a matrix to map coordinates rows, cols: subscripts of the data matrix, starting from 0</p>
+<dl class="simple">
+<dt>Args: </dt><dd><p>rows: rows in the array
+cols: cols in the array</p>
+</dd>
+<dt>Returns: </dt><dd><p>X and Y coordinate values</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="hipims_io.spatial_analysis.tif_read">
+<code class="sig-prename descclassname">hipims_io.spatial_analysis.</code><code class="sig-name descname">tif_read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#hipims_io.spatial_analysis.tif_read" title="Permalink to this definition">¶</a></dt>
+<dd><p>read tif file and return array, header, projection only read the first band</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-hipims_io">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-hipims_io" title="Permalink to this headline">¶</a></h2>
+<p>init
+To do:</p>
+<blockquote>
+<div><p>initialize a package</p>
+</div></blockquote>
+<p>Created on Wed Apr  1 14:56:15 2020</p>
+<p>&#64;author: Xiaodong Ming</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">hipims_io</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">hipims_io</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">hipims_io</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.Boundary">hipims_io.Boundary</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#boundary">Boundary</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.InputHipims">hipims_io.InputHipims</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#inputhipims">InputHipims</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.Landcover">hipims_io.Landcover</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#landcover">Landcover</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.OutputHipims">hipims_io.OutputHipims</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#outputhipims">OutputHipims</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.Rainfall">hipims_io.Rainfall</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rainfall">Rainfall</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.Raster">hipims_io.Raster</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#raster">Raster</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.Summary">hipims_io.Summary</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.demo_functions">hipims_io.demo_functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#demo-functions">Demo functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.grid_show">hipims_io.grid_show</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#grid-show">grid_show</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.indep_functions">hipims_io.indep_functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#independent-functions">Independent functions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.rainfall_processing">hipims_io.rainfall_processing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rainfall-processing">rainfall_processing</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io.spatial_analysis">hipims_io.spatial_analysis</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#spatial-analysis">spatial_analysis</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-hipims_io">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">hipims_io</a><ul>
+      <li>Previous: <a href="modules.html" title="previous chapter">hipims_io</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Xiaodong Ming.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/hipims_io.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

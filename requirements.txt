@@ -6,3 +6,4 @@ rasterio
 imageio
 pyshp
 fiona
+hydro_raster

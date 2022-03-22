@@ -18,8 +18,8 @@ import datetime
 import warnings
 import numpy as np
 import pandas as pd
-from . import spatial_analysis as sp
-from .Raster import Raster
+from hydro_raster import spatial_analysis as sp
+from hydro_raster.Raster import Raster
 from .Summary import Summary
 from .indep_functions import save_as_dict, _create_io_folders, load_object
 class OutputHipims:

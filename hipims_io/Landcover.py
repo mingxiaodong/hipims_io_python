@@ -14,7 +14,7 @@ To do:
 
 """
 import numpy as np
-from .Raster import Raster
+from hydro_raster.Raster import Raster
 from . import indep_functions as indep_f
 class Landcover:
     """ A class to set landcover data and use it to set grid parameters

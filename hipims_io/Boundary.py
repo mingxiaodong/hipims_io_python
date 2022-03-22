@@ -17,7 +17,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.patches as mplP
-from . import spatial_analysis as sp
+from hydro_raster import spatial_analysis as sp
 #%% boundary class definition
 class Boundary(object):
     """

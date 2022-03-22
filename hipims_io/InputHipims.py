@@ -51,12 +51,12 @@ import copy
 import warnings
 import numpy as np
 from datetime import datetime
-from .Raster import Raster
+from hydro_raster.Raster import Raster
 from .Boundary import Boundary
 from .Rainfall import Rainfall
 from .Landcover import Landcover
 from .Summary import Summary
-from .spatial_analysis import sub2map
+from hydro_raster.spatial_analysis import sub2map
 from . import indep_functions as indep_f
 #%% definition of class InputHipims
 class InputHipims:
