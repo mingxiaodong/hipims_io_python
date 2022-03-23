@@ -1,8 +1,8 @@
 hipims_io
 --------
-Python code to process input and output files of [HiPIMS flood model](https://github.com/HEMLab/hipims). This code follows [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html).
+Python code to process input and output files of [HiPIMS flood model](https://www.hemlab.org/models/). This code follows [Google Python Style Guide](http://google.github.io/styleguide/pyguide.html).
 
-Python version: >=3.6. To use the full function of this package for processing raster and shapefile, gdal and pyshp are required.
+Python version: >=3.6. The main content of this package is also included in a [Python API of HiPIMS](https://pypims.readthedocs.io/en/latest/).
 
 To install hipims_io from command window/terminal:
 ```
@@ -28,12 +28,12 @@ A quick demonstration to setup a HiPIMS input object with a data path contaning 
 
 ```
 import os
-import hipims_io as hpio
+import hipims_io as hp
 from hipims_io.demo_functions import get_sample_data
 dem_path, _ = get_sample_data(return_path=True) # get the path of sample data
 data_path = os.path.dirname(dem_path)
 case_folder = os.path.join(os.getcwd(), 'hipims_case') # define a case folder in the current directory
-obj_in = hpio.InputHipims(case_folder=case_folder, num_of_sections=1, 
+obj_in = hp.InputHipims(case_folder=case_folder, num_of_sections=1, 
                           data_path=data_path) # create input object
 obj_in.domain_show() # show domain map
 print(obj_in) # show case information
@@ -45,12 +45,12 @@ A step-by-step tutorial to setup a HiPIMS input object with sample data:
 ```
 import os
 import numpy as np
-import hipims_io as hpio
+import hipims_io as hp
 
-dem_file, model_data, _ = hpio.get_sample_data() # get sample data
+dem_file, model_data, _ = hp.get_sample_data() # get sample data
 case_folder = os.path.join(os.getcwd(), 'hipims_case') # define a case folder in the current directory
 # create a single-gpu input object
-obj_in = hpio.InputHipims(dem_data=dem_file, num_of_sections=1, case_folder=case_folder)
+obj_in = hp.InputHipims(dem_data=dem_file, num_of_sections=1, case_folder=case_folder)
 
 # set a initial water depth of 0.5 m
 obj_in.set_initial_condition('h0', 0.5)

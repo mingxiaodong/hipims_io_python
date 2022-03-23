@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# @Author: Xiaodong Ming
+# @Date:   2022-03-22 18:01:20
+# @Last Modified by:   Xiaodong Ming
+# @Last Modified time: 2022-03-23 14:29:47
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -57,6 +62,9 @@ class OutputHipims:
             self.num_of_sections = num_of_sections
             self._set_IO_folders()
             self._set_grid_header(asc_file=header_file_tag)
+            summary_file = os.path.join(case_folder, 'readme.txt')
+            summary_obj = Summary('/home/lunet/cvxxm/case_test/readme.txt')
+            self.Summary = summary_obj
         elif type(input_obj) is dict: # load from a dict
             for key, value in input_obj.items():
                 if key=='Summary':
@@ -144,18 +152,21 @@ class OutputHipims:
             Raster: a raster object of the grid
 
         """
+        
         if not file_tag.endswith('.asc'):
             file_tag = file_tag+'.asc'
         if compressed:
             file_tag = file_tag+'.gz'
         if self.num_of_sections==1:
             file_name = os.path.join(self.output_folder, file_tag)
+            print('reading file '+file_name)
             if os.path.isfile(file_name):
                 grid_array, _, _ = sp.arcgridread(file_name)
             else:
                 warnings.warn(file_name+' is not found!')
                 grid_array = None
         else: # multi-GPU
+            print('reading file '+file_tag)
             grid_array = self._combine_multi_gpu_grid_data(file_tag)
         if grid_array is None:
             warnings.warn(file_tag+' is not read successfully!')
@@ -257,16 +268,15 @@ class OutputHipims:
                 times_array, t_max = self._read_run_time()
                 result_names = ['h_max_'+'{:g}'.format(t_max)]
                 for one_time in times_array:
-                    result_names.append('h_'+'{:g}'.format(t_max))
-                    result_names.append('hUx_'+'{:g}'.format(t_max))
-                    result_names.append('hUy_'+'{:g}'.format(t_max))
+                    result_names.append('h_'+'{:g}'.format(one_time))
+                    result_names.append('hUx_'+'{:g}'.format(one_time))
+                    result_names.append('hUy_'+'{:g}'.format(one_time))
             else:
                 result_names = [result_names]
         if len(result_names)>1:
             print('To read files:')
             print(result_names)
         for file_tag in result_names:
-            print('reading file '+file_tag)
             grid_obj = self.read_grid_file(file_tag, compressed)
             self.grid_results[file_tag] = grid_obj.array
 
@@ -297,10 +307,10 @@ class OutputHipims:
         times_array = np.linspace(0, 3600, num_step)
         return times_array, t_max
     
-    def _combine_multi_gpu_grid_data(self, asc_file_name):
+    def _combine_multi_gpu_grid_data(self, grid_file_name):
         """Combine multi-gpu grid files into a single file
 
-        asc_file_name: string endswith '.asc'
+        grid_file_name: string endswith '.asc' or '.txt'
         """
         header_global = self.header
         header_list = self.header_list
@@ -309,8 +319,13 @@ class OutputHipims:
         array_global = np.zeros(grid_shape)
         # check file existence
         file_complete = True
-        for folder0 in output_folder:
-            file_name = os.path.join(folder0, asc_file_name)
+        if grid_file_name == 'DEM.txt':
+            input_folder = self.input_folder
+            folder_list = [os.path.join(x, 'mesh') for x in input_folder]
+        else:
+            folder_list = output_folder
+        for folder0 in folder_list:
+            file_name = os.path.join(folder0, grid_file_name)
             if os.path.isfile(file_name):
                 pass
             else:
@@ -319,7 +334,7 @@ class OutputHipims:
         if file_complete:
             for header0, folder0 in zip(header_list, output_folder):
                 ind_top, ind_bottom = _header2row_numbers(header0, header_global)
-                file_name = os.path.join(folder0, asc_file_name)
+                file_name = os.path.join(folder0, grid_file_name)
                 array_local, _, _ = sp.arcgridread(file_name)
                 array_global[ind_top:ind_bottom+1,:] = array_local
         else:
@@ -369,7 +384,9 @@ class OutputHipims:
             else:
                 file_name = os.path.join(output_folder, asc_file)
             if os.path.exists(file_name):
-                self.header = sp.arc_header_read(file_name)
+                dem_ras = Raster(file_name)
+                self.header = dem_ras.header
+                self.dem_array = dem_ras.array
             else:
                 warnings.warn(warning_message)
         else: #multi-gpu model
@@ -390,6 +407,8 @@ class OutputHipims:
             if header_set:
                 self.header_list = headers
                 self.header = _header_local2global(headers)
+            if asc_file is None:
+                self.dem_array = self._combine_multi_gpu_grid_data('DEM.txt')
     
     def save_object(self, file_name):
         """Save the object to a pickle file
