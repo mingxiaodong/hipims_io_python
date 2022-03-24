@@ -2,7 +2,7 @@
 # @Author: Xiaodong Ming
 # @Date:   2022-03-22 18:01:20
 # @Last Modified by:   Xiaodong Ming
-# @Last Modified time: 2022-03-23 14:29:47
+# @Last Modified time: 2022-03-23 14:56:34
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
@@ -332,7 +332,7 @@ class OutputHipims:
                 warnings.warn(file_name+' is not found!')
                 file_complete = False
         if file_complete:
-            for header0, folder0 in zip(header_list, output_folder):
+            for header0, folder0 in zip(header_list, folder_list):
                 ind_top, ind_bottom = _header2row_numbers(header0, header_global)
                 file_name = os.path.join(folder0, grid_file_name)
                 array_local, _, _ = sp.arcgridread(file_name)
