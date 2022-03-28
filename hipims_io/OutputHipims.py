@@ -63,7 +63,7 @@ class OutputHipims:
             self._set_IO_folders()
             self._set_grid_header(asc_file=header_file_tag)
             summary_file = os.path.join(case_folder, 'readme.txt')
-            summary_obj = Summary('/home/lunet/cvxxm/case_test/readme.txt')
+            summary_obj = Summary(summary_file)
             self.Summary = summary_obj
         elif type(input_obj) is dict: # load from a dict
             for key, value in input_obj.items():
