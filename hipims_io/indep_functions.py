@@ -19,6 +19,7 @@ import gzip
 import pickle
 import os
 import shutil
+import glob
 import scipy.signal
 import numpy as np
 from .rainfall_processing import _check_rainfall_rate_values
@@ -79,13 +80,62 @@ def clean_output(case_folder, num_of_sections, file_tag='*'):
             files_to_remove = case_folder+str(i)+'/output/'+file_tag
             os.system('rm '+files_to_remove)
 
+def backup2initial(case_folder, num_of_sections=1, time_tag=None):
+    """
+    convert backup files from output folder to intial files of h and hU in the
+    input folder
+    
+    name format of backup files: h_backup__3600.dat, hU_backup__3600.dat
+
+    Parameters
+    ----------
+    case_folder : str, directory of the model case.
+    num_of_sections : int, number of sections. The default is 1.
+    time_tag : number or string, optional
+        the time tag to choose backup files. The default will be the newest 
+        backup file.
+    Returns
+    -------
+    None.
+
+    """
+    if num_of_sections>1:
+        for i in np.arange(num_of_sections):
+            case_folder_mg = os.path.join(case_folder, str(i))
+            backup2initial(case_folder_mg, 1, time_tag)
+    else:
+        input_folder = os.path.join(case_folder, 'input')
+        output_folder = os.path.join(case_folder, 'output')
+        if time_tag is None: # if tim_tag is not given, choose the newest files
+            h_backupfiles = list(filter(os.path.isfile, 
+                                        glob.glob(output_folder+'/h_backup__*.dat')))
+            h_backupfiles.sort(key=lambda x: os.path.getmtime(x))
+            hU_backupfiles = list(filter(os.path.isfile, 
+                                        glob.glob(output_folder+'/hU_backup__*.dat')))
+            hU_backupfiles.sort(key=lambda x: os.path.getmtime(x))
+            h_backup_file = h_backupfiles[-1] # the newest h_backup file
+            hU_backup_file = hU_backupfiles[-1] # the newest hU_backup file
+        else:
+            h_backup_file = os.path.join(output_folder, 
+                                         'h_backup__'+str(time_tag)+'.dat')
+            hU_backup_file = os.path.join(output_folder, 
+                                         'hU_backup__'+str(time_tag)+'.dat')
+        h_file = os.path.join(input_folder, 'field', 'h.dat')
+        hU_file = os.path.join(input_folder, 'field', 'hU.dat')
+        shutil.copy(h_backup_file, h_file)
+        print(h_file+' is replaced by '+h_backup_file)
+        shutil.copy(hU_backup_file, hU_file)
+        print(hU_file+' is replaced by '+hU_backup_file)
+
 #%% ***************************************************************************
 # *************************Public functions************************************
 def write_times_setup(case_folder=None, num_of_sections=1, time_values=None):
-    """Generate a times_setup.dat file. The file contains numbers representing the start time, end time, output interval, and backup interval in seconds
+    """Generate a times_setup.dat file. The file contains numbers representing 
+    the start time, end time, output interval, and backup interval in seconds
 
     Args:
-        time_values: array or list of int/float, representing time in seconds, default values are [0, 3600, 1800, 3600]
+        time_values: array or list of int/float, representing time in seconds, 
+        default values are [0, 3600, 1800, 3600]
 
     """
     case_folder = _check_case_folder(case_folder)
@@ -101,7 +151,8 @@ def write_times_setup(case_folder=None, num_of_sections=1, time_values=None):
 
 def write_device_setup(case_folder=None,
                        num_of_sections=1, device_values=None):
-    """Generate a device_setup.dat file. The file contains numbers representing the GPU number for each section
+    """Generate a device_setup.dat file. The file contains numbers 
+    representing the GPU number for each section
 
     Args:
         case_folder: string, the path of model
@@ -124,7 +175,10 @@ def write_rain_source(rain_source, case_folder=None, num_of_sections=1):
     """ Write rainfall sources [Independent function from hipims class]
 
     Args:
-        rain_source: numpy array, The 1st column is time in seconds, the 2nd towards the end columns are rainfall rate in m/s for each source ID in rainfall mask array if for multiple GPU, then copy the rain source file to all domain folders
+        rain_source: numpy array, The 1st column is time in seconds, the 2nd 
+        towards the end columns are rainfall rate in m/s for each source ID in 
+        rainfall mask array if for multiple GPU, then copy the rain source 
+        file to all domain folders
         case_folder: string, the path of model
 
     """
@@ -159,7 +213,9 @@ def _write_two_arrays(file_name, id_values, bound_id_code=None):
 
         id_values: valid cell ID - value pair
 
-        bound_id_code: boundary cell ID - codes pair. If bound_id_code is not given, then the second part of the file won't be written (only the case for precipitatin_mask.dat)
+        bound_id_code: boundary cell ID - codes pair. If bound_id_code is not 
+        given, then the second part of the file won't be written (only the case
+        for precipitatin_mask.dat)
 
     """
     if not file_name.endswith('.dat'):
@@ -276,7 +332,8 @@ def _get_split_rows(input_array, num_of_sections):
 def _get_cell_id_array(dem_array):
     """ to generate two arrays with the same size of dem_array:
 
-    1. valid_id: to store valid cell id values (sequence number) starting from 0, from bottom, left to right, top
+    1. valid_id: to store valid cell id values (sequence number) starting from
+    0, from bottom, left to right, top
 
     2. outline_id: to store valid cell id on the boundary cells
 
@@ -316,7 +373,8 @@ def _get_cell_id_array(dem_array):
 def _cell_subs_convertor(input_cell_subs, header_global,
                          header_local, to_global=True):
     """
-    Convert global cell subs to divided local cell subs or the otherwise and return output_cell_subs, only rows need to be changed
+    Convert global cell subs to divided local cell subs or the otherwise and 
+    return output_cell_subs, only rows need to be changed
 
     input_cell_subs : (tuple) input rows and cols of a grid
 
