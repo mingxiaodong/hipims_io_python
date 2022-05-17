@@ -373,11 +373,15 @@ class InputHipims:
 
         Args:
             runtime: a list of four values representing start, end, output 
-                interval and backup interval respectively
+                interval and backup interval respectively. If only three
+                were given, then the backup interval will be given as the end
+                time(the 2nd value)
         """
         if runtime is None:
             runtime = [0, 3600, 3600, 3600]
         runtime = np.array(runtime)
+        if runtime.size == 3: #
+            runtime = np.insert(runtime, 3, runtime[1])
         self.times = runtime
         runtime_str = ('{0}-start, {1}-end, {2}-output interval, '
                        '{3}-backup interval')
